@@ -41,7 +41,26 @@ export interface ButtonProps
 const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
   ({ className, variant, size, asChild = false, ...props }, ref) => {
     const Comp = asChild ? Slot : "button";
-    return <Comp className={cn(buttonVariants({ variant, size, className }))} ref={ref} {...props} />;
+    const handleMouseMove: React.MouseEventHandler<HTMLButtonElement> = (e) => {
+      const target = e.currentTarget as HTMLElement;
+      const rect = target.getBoundingClientRect();
+      const x = e.clientX - rect.left;
+      const y = e.clientY - rect.top;
+      target.style.setProperty('--ripple-x', `${x}px`);
+      target.style.setProperty('--ripple-y', `${y}px`);
+    };
+
+    return (
+      <Comp
+        className={cn("ripple", buttonVariants({ variant, size, className }))}
+        ref={ref}
+        onMouseMove={(e) => {
+          handleMouseMove(e);
+          props.onMouseMove?.(e);
+        }}
+        {...props}
+      />
+    );
   },
 );
 Button.displayName = "Button";
