@@ -97,7 +97,7 @@ const Chat = () => {
 
   return (
     <motion.div 
-      className="flex h-screen bg-gradient-to-br from-slate-900 via-blue-900 to-slate-900"
+      className="flex h-screen relative bg-gradient-to-b from-sky-300/30 via-cyan-700/25 to-blue-950/95"
       initial={{ 
         opacity: 0,
         scale: 0.9,
@@ -123,10 +123,19 @@ const Chat = () => {
         stiffness: 100,
         damping: 20
       }}
-      style={{
-        willChange: 'transform, opacity, filter'
-      }}
+      style={{ willChange: 'transform, opacity, filter' }}
     >
+      {/* Subtle animated surface glow */}
+      <motion.div
+        className="pointer-events-none absolute inset-0 -z-10"
+        style={{
+          background: 'radial-gradient(800px 320px at 50% 0%, rgba(56,189,248,0.18), rgba(56,189,248,0.08) 50%, transparent 70%)'
+        }}
+        initial={{ opacity: 0.12, backgroundPositionX: '0%' }}
+        animate={{ opacity: 0.16, backgroundPositionX: ['0%', '100%', '0%'] }}
+        transition={{ duration: 24, repeat: Infinity, ease: 'easeInOut' }}
+        aria-hidden
+      />
       {/* Removed floating sidebar toggle to improve UX */}
 
       {/* Sidebar */}
@@ -212,7 +221,7 @@ const Chat = () => {
         transition={{ duration: 0.4, ease: [0.25, 0.46, 0.45, 0.94] }}
       >
         {/* Chat Header */}
-        <div className="bg-gradient-to-r from-slate-800/80 to-slate-700/80 border-b border-slate-600/50 px-6 py-4 flex items-center justify-between">
+        <div className="bg-gradient-to-r from-slate-900/80 to-slate-800/70 border-b border-slate-700/50 backdrop-blur-sm px-6 py-4 flex items-center justify-between">
           <div className="flex items-center gap-3">
             <TransitionLink to="/" variant="ripple">
               <button className="ripple p-2 rounded-lg bg-slate-600/20 hover:bg-slate-600/30 text-slate-400 transition-all duration-200 hover:scale-105">
@@ -253,10 +262,10 @@ const Chat = () => {
               transition={{ duration: 0.5, delay: index * 0.1 }}
             >
               <div
-                className={`max-w-[80%] rounded-2xl px-4 py-3 ${
+                className={`max-w-[80%] rounded-2xl px-4 py-3 backdrop-blur-sm ${
                   message.type === 'user'
-                    ? 'bg-gradient-to-r from-blue-600 to-cyan-600 text-white'
-                    : 'bg-slate-700/50 text-slate-200 border border-slate-600/30'
+                    ? 'bg-gradient-to-r from-cyan-600 to-blue-600 text-white shadow-lg shadow-cyan-900/20'
+                    : 'bg-slate-800/50 text-slate-200 border border-slate-600/30 shadow-md shadow-slate-900/10'
                 }`}
               >
                 <div className="flex items-start gap-3">
@@ -283,14 +292,14 @@ const Chat = () => {
         </div>
 
         {/* Input Area */}
-        <div className="border-t border-slate-600/50 p-6 bg-gradient-to-t from-slate-800/50 to-transparent">
+        <div className="border-t border-slate-700/50 p-6 bg-gradient-to-t from-slate-900/50 to-transparent backdrop-blur-sm">
           <form onSubmit={handleSubmit} className="flex gap-3">
             <input
               type="text"
               value={inputValue}
               onChange={(e) => setInputValue(e.target.value)}
               placeholder="Ask me about the ocean... 🌊"
-              className="flex-1 bg-slate-700/50 border border-slate-600/50 rounded-xl px-4 py-3 text-slate-200 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-cyan-500/50 focus:border-cyan-500/50 transition-all"
+              className="flex-1 bg-slate-800/50 border border-slate-700/50 rounded-xl px-4 py-3 text-slate-200 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-cyan-500/40 focus:border-cyan-500/40 transition-all backdrop-blur-sm"
             />
             <motion.button
               type="submit"

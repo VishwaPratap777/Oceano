@@ -52,6 +52,7 @@ const Navbar = () => {
                 key={link.name}
                 to={link.href}
                 variant="fade"
+                noOverlay
                 className="nav-link px-3 py-2 text-sm font-medium"
               >
                 {link.name}
@@ -83,6 +84,7 @@ const Navbar = () => {
                   key={link.name}
                   to={link.href}
                   variant="fade"
+                  noOverlay
                   className="nav-link px-3 py-2 text-sm font-medium block"
                   onClick={() => setIsOpen(false)}
                 >

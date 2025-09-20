@@ -8,6 +8,8 @@ const OceanBackground = () => {
   const leftStreamRef = useRef<HTMLDivElement>(null);
   const rightStreamRef = useRef<HTMLDivElement>(null);
 
+  const tweensRef = useRef<gsap.core.Tween[]>([]);
+
   useEffect(() => {
     // Debug: confirm background waves mounted
     if (typeof window !== 'undefined') {
@@ -15,14 +17,14 @@ const OceanBackground = () => {
       console.log('[OceanBackground] initializing wave animations');
     }
     const layers = [
-      { ref: waveBack, duration: 60 },
-      { ref: waveMid, duration: 40 },
-      { ref: waveFront, duration: 25 }
+      { ref: waveBack, duration: 50 },
+      { ref: waveMid, duration: 30 },
+      { ref: waveFront, duration: 18 }
     ];
 
     const animations: gsap.core.Tween[] = [];
 
-    layers.forEach(({ ref, duration }) => {
+    layers.forEach(({ ref, duration }, idx) => {
       if (!ref.current) return;
       // Two tiles create a seamless loop. Animate X from 0 to -50% and repeat.
       const tween = gsap.to(ref.current, {
@@ -32,6 +34,17 @@ const OceanBackground = () => {
         repeat: -1
       });
       animations.push(tween);
+
+      // Subtle vertical bobbing per layer for a fluid effect
+      animations.push(
+        gsap.to(ref.current, {
+          y: idx === 2 ? -6 : idx === 1 ? -4 : -2,
+          duration: 3 + idx,
+          yoyo: true,
+          repeat: -1,
+          ease: 'sine.inOut'
+        })
+      );
     });
 
     // Side bubble streams animation
@@ -62,9 +75,35 @@ const OceanBackground = () => {
       ...animateStream(rightStreamRef.current)
     ];
 
+    // Keep a reference to all active tweens for resume handling
+    tweensRef.current = [...animations, ...streamTweens];
+
+    const resumeAll = () => {
+      tweensRef.current.forEach(t => {
+        if (t.paused()) t.resume();
+        // Nudge playhead to ensure rendering continues
+        if (!t.isActive()) t.play();
+      });
+    };
+
+    const onVisibility = () => {
+      if (document.visibilityState === 'visible') resumeAll();
+    };
+    const onFocus = () => resumeAll();
+
+    if (typeof document !== 'undefined') {
+      document.addEventListener('visibilitychange', onVisibility);
+      window.addEventListener('focus', onFocus);
+    }
+
     return () => {
       animations.forEach(t => t.kill());
       streamTweens.forEach(t => t.kill());
+      tweensRef.current = [];
+      if (typeof document !== 'undefined') {
+        document.removeEventListener('visibilitychange', onVisibility);
+        window.removeEventListener('focus', onFocus);
+      }
     };
   }, []);
 
@@ -81,18 +120,18 @@ const OceanBackground = () => {
   }) => (
     <div className="absolute left-0 right-0 overflow-hidden" style={{ bottom: 0, height }}>
       <div ref={refProp} className="flex" style={{ width: '200%', willChange: 'transform' }}>
-        {/* Tile A */}
+        {/* Tile A - smooth, rounded wave */}
         <svg className="w-1/2 h-full" viewBox="0 0 1440 320" preserveAspectRatio="none" aria-hidden>
           <path
-            d="M0,180 C160,165 320,205 480,195 C640,185 800,170 960,178 C1120,186 1280,205 1440,190 L1440,320 L0,320 Z"
+            d="M0,230 C180,210 360,250 540,230 C720,210 900,250 1080,230 C1260,210 1440,240 1440,240 L1440,320 L0,320 Z"
             fill={color}
             fillOpacity={opacity}
           />
         </svg>
-        {/* Tile B */}
+        {/* Tile B - same shape for seamless tiling */}
         <svg className="w-1/2 h-full" viewBox="0 0 1440 320" preserveAspectRatio="none" aria-hidden>
           <path
-            d="M0,180 C160,165 320,205 480,195 C640,185 800,170 960,178 C1120,186 1280,205 1440,190 L1440,320 L0,320 Z"
+            d="M0,230 C180,210 360,250 540,230 C720,210 900,250 1080,230 C1260,210 1440,240 1440,240 L1440,320 L0,320 Z"
             fill={color}
             fillOpacity={opacity}
           />
@@ -102,7 +141,7 @@ const OceanBackground = () => {
   );
 
   return (
-    <div className="fixed inset-0 z-[1] pointer-events-none">
+    <div className="fixed inset-0 z-0 pointer-events-none">
       {/* Dark ocean gradient background */}
       <div className="absolute inset-0 bg-gradient-to-b from-slate-950 via-slate-900 to-teal-950" />
 
@@ -129,21 +168,21 @@ const OceanBackground = () => {
         ))}
       </div>
 
-      {/* Wave layers at bottom with subtle opacities */}
-      <div className="absolute inset-x-0 bottom-0 h-[45vh] md:h-[50vh]">
+      {/* Wave layers at bottom (slightly higher) */}
+      <div className="absolute inset-x-0 bottom-0 h-[52vh] md:h-[58vh]">
         <div className="absolute inset-0">
-          <WaveStrip color="#06b6d4" opacity={0.24} height="50%" refProp={waveBack} />
+          <WaveStrip color="#38bdf8" opacity={0.28} height="55%" refProp={waveBack} />
         </div>
         <div className="absolute inset-0">
-          <WaveStrip color="#22d3ee" opacity={0.3} height="60%" refProp={waveMid} />
+          <WaveStrip color="#22d3ee" opacity={0.34} height="62%" refProp={waveMid} />
         </div>
         <div className="absolute inset-0">
-          <WaveStrip color="#67e8f9" opacity={0.38} height="70%" refProp={waveFront} />
+          <WaveStrip color="#67e8f9" opacity={0.42} height="70%" refProp={waveFront} />
         </div>
         {/* Subtle gradient fade at the very bottom */}
-        <div className="absolute inset-x-0 bottom-0 h-12 bg-gradient-to-t from-slate-950/70 to-transparent" />
+        <div className="absolute inset-x-0 bottom-0 h-14 bg-gradient-to-t from-slate-950/80 to-transparent" />
         {/* Top fade to blend waves into content */}
-        <div className="absolute inset-x-0 top-0 h-14 bg-gradient-to-b from-slate-900/40 to-transparent" />
+        <div className="absolute inset-x-0 top-0 h-16 bg-gradient-to-b from-slate-900/45 to-transparent" />
       </div>
     </div>
   );

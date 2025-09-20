@@ -9,6 +9,10 @@ import NotFound from "./pages/NotFound";
 import Navbar from "./components/Navbar";
 import PageTransitionWrapper from "./components/PageTransitionWrapper";
 import { AnimatePresence } from "framer-motion";
+import Learn from "./pages/Learn";
+import MouseRippleTrail from "./components/effects/MouseRippleTrail";
+import ScrollIndicators from "@/components/scroll/ScrollIndicators";
+import OceanBackground from "@/components/backgrounds/OceanBackground";
 
 const queryClient = new QueryClient();
 
@@ -18,6 +22,9 @@ const AppContent = () => {
 
   return (
     <div className="min-h-screen">
+      <MouseRippleTrail />
+      <OceanBackground />
+      <ScrollIndicators />
       {!isChatPage && <Navbar />}
       <AnimatePresence mode="wait">
         <Routes>
@@ -44,6 +51,11 @@ const AppContent = () => {
           <Route path="/chat" element={
             <PageTransitionWrapper variant="stairs">
               <Chat />
+            </PageTransitionWrapper>
+          } />
+          <Route path="/learn" element={
+            <PageTransitionWrapper variant="stairs">
+              <Learn />
             </PageTransitionWrapper>
           } />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}

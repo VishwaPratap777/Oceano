@@ -1,7 +1,7 @@
 import { useState, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 
-export type TransitionVariant = "ripple" | "wave" | "fade" | "slide";
+export type TransitionVariant = "ripple" | "fade" | "slide";
 
 interface UsePageTransitionReturn {
   isTransitioning: boolean;

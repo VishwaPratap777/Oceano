@@ -3,7 +3,6 @@ import { useLocation } from "react-router-dom";
 import Hero from "@/components/Hero";
 import AboutSection from "@/components/sections/AboutSection";
 import HomeSections from "@/components/sections/HomeSections";
-import OceanBackground from "@/components/backgrounds/OceanBackground";
 import HowWeDoIt from "@/components/sections/HowWeDoIt";
 import ScrollIndicators from "@/components/scroll/ScrollIndicators";
 import SiteFooter from "@/components/SiteFooter";
@@ -36,7 +35,6 @@ const Index = () => {
 
   return (
     <>
-      <OceanBackground />
       <ScrollIndicators />
       <main className="relative z-10">
         <Hero />

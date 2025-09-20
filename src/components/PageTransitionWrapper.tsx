@@ -3,7 +3,7 @@ import Stairs from "./Stairs";
 
 interface PageTransitionWrapperProps {
   children: ReactNode;
-  variant?: "ripple" | "wave" | "fade" | "slide" | "stairs";
+  variant?: "ripple" | "fade" | "slide" | "stairs";
 }
 
 const PageTransitionWrapper = ({ children, variant = "stairs" }: PageTransitionWrapperProps) => {

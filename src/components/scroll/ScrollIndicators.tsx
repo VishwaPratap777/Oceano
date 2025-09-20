@@ -17,7 +17,7 @@ const ScrollIndicators = () => {
     <>
       {/* Top progress bar */}
       <motion.div
-        className="fixed top-0 left-0 right-0 h-1.5 z-[60]"
+        className="fixed top-0 left-0 right-0 h-1.5 z-[20000]"
         style={{ scaleX: progress, transformOrigin: "0% 50%" }}
       >
         <div className="w-full h-full bg-gradient-to-r from-cyan-500 via-blue-500 to-indigo-500 shadow-[0_0_12px_rgba(34,211,238,0.35)]" />
@@ -26,7 +26,7 @@ const ScrollIndicators = () => {
       {/* Back to top button */}
       <motion.button
         onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}
-        className="fixed bottom-6 right-6 z-[60] p-3 rounded-full bg-slate-800/80 border border-slate-600/40 text-slate-200 shadow-lg backdrop-blur-md hover:bg-slate-700/80 hover:scale-105 transition"
+        className="fixed bottom-6 right-6 z-[20000] p-3 rounded-full bg-slate-800/80 border border-slate-600/40 text-slate-200 shadow-lg backdrop-blur-md hover:bg-slate-700/80 hover:scale-105 transition"
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: showTop ? 1 : 0, y: showTop ? 0 : 20, pointerEvents: showTop ? "auto" : "none" as any }}
         aria-label="Back to top"
