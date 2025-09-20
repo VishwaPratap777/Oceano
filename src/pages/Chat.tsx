@@ -97,7 +97,7 @@ const Chat = () => {
 
   return (
     <motion.div 
-      className="flex h-screen relative bg-gradient-to-b from-sky-300/30 via-cyan-700/25 to-blue-950/95"
+      className="flex h-screen relative bg-transparent"
       initial={{ 
         opacity: 0,
         scale: 0.9,
@@ -129,7 +129,7 @@ const Chat = () => {
       <motion.div
         className="pointer-events-none absolute inset-0 -z-10"
         style={{
-          background: 'radial-gradient(800px 320px at 50% 0%, rgba(56,189,248,0.18), rgba(56,189,248,0.08) 50%, transparent 70%)'
+          background: 'radial-gradient(800px 320px at 50% 0%, rgba(56,189,248,0.14), rgba(56,189,248,0.06) 50%, transparent 70%)'
         }}
         initial={{ opacity: 0.12, backgroundPositionX: '0%' }}
         animate={{ opacity: 0.16, backgroundPositionX: ['0%', '100%', '0%'] }}
@@ -221,17 +221,17 @@ const Chat = () => {
         transition={{ duration: 0.4, ease: [0.25, 0.46, 0.45, 0.94] }}
       >
         {/* Chat Header */}
-        <div className="bg-gradient-to-r from-slate-900/80 to-slate-800/70 border-b border-slate-700/50 backdrop-blur-sm px-6 py-4 flex items-center justify-between">
+        <div className="bg-gradient-to-r from-slate-950/70 to-slate-900/60 border-b border-cyan-500/15 backdrop-blur-md px-6 py-4 flex items-center justify-between shadow-[0_8px_30px_rgba(34,211,238,0.08)]">
           <div className="flex items-center gap-3">
             <TransitionLink to="/" variant="ripple">
-              <button className="ripple p-2 rounded-lg bg-slate-600/20 hover:bg-slate-600/30 text-slate-400 transition-all duration-200 hover:scale-105">
+              <button className="ripple p-2 rounded-lg bg-slate-700/30 hover:bg-slate-600/40 text-slate-300 transition-all duration-200 hover:scale-105">
                 <ArrowLeft className="w-4 h-4" />
               </button>
             </TransitionLink>
             {/* Header menu toggle to open sidebar when closed */}
             {!isSidebarOpen && (
               <button
-                className="ripple p-2 rounded-lg bg-slate-600/20 hover:bg-slate-600/30 text-slate-400 transition-all duration-200 hover:scale-105"
+                className="ripple p-2 rounded-lg bg-slate-700/30 hover:bg-slate-600/40 text-slate-300 transition-all duration-200 hover:scale-105"
                 onClick={() => setIsSidebarOpen(true)}
                 aria-label="Open chat history"
               >
@@ -239,7 +239,7 @@ const Chat = () => {
               </button>
             )}
             <div className="flex items-center gap-3">
-              <div className="w-8 h-8 rounded-full bg-gradient-to-br from-cyan-400 to-blue-500 flex items-center justify-center text-slate-900 font-bold text-sm">
+              <div className="w-8 h-8 rounded-full bg-gradient-to-br from-teal-400 to-cyan-500 flex items-center justify-center text-slate-900 font-bold text-sm shadow-[0_0_20px_rgba(34,211,238,0.35)]">
                 🌊
               </div>
               <div>
@@ -262,15 +262,15 @@ const Chat = () => {
               transition={{ duration: 0.5, delay: index * 0.1 }}
             >
               <div
-                className={`max-w-[80%] rounded-2xl px-4 py-3 backdrop-blur-sm ${
+                className={`max-w-[80%] rounded-2xl px-4 py-3 backdrop-blur-md ${
                   message.type === 'user'
-                    ? 'bg-gradient-to-r from-cyan-600 to-blue-600 text-white shadow-lg shadow-cyan-900/20'
-                    : 'bg-slate-800/50 text-slate-200 border border-slate-600/30 shadow-md shadow-slate-900/10'
+                    ? 'bg-gradient-to-r from-teal-500 to-cyan-500 text-white shadow-lg shadow-cyan-500/20 border border-cyan-400/20'
+                    : 'bg-slate-900/60 text-slate-200 border border-cyan-500/15 shadow-md shadow-slate-900/20'
                 }`}
               >
                 <div className="flex items-start gap-3">
                   {message.type === 'assistant' && (
-                    <div className="w-8 h-8 rounded-full bg-gradient-to-br from-cyan-400 to-blue-500 flex items-center justify-center text-slate-900 font-bold text-sm flex-shrink-0">
+                    <div className="w-8 h-8 rounded-full bg-gradient-to-br from-teal-400 to-cyan-500 flex items-center justify-center text-slate-900 font-bold text-sm flex-shrink-0 shadow-[0_0_16px_rgba(34,211,238,0.25)]">
                       🌊
                     </div>
                   )}
@@ -292,18 +292,18 @@ const Chat = () => {
         </div>
 
         {/* Input Area */}
-        <div className="border-t border-slate-700/50 p-6 bg-gradient-to-t from-slate-900/50 to-transparent backdrop-blur-sm">
+        <div className="border-t border-cyan-500/15 p-6 bg-gradient-to-t from-slate-950/60 to-transparent backdrop-blur-md">
           <form onSubmit={handleSubmit} className="flex gap-3">
             <input
               type="text"
               value={inputValue}
               onChange={(e) => setInputValue(e.target.value)}
               placeholder="Ask me about the ocean... 🌊"
-              className="flex-1 bg-slate-800/50 border border-slate-700/50 rounded-xl px-4 py-3 text-slate-200 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-cyan-500/40 focus:border-cyan-500/40 transition-all backdrop-blur-sm"
+              className="flex-1 bg-slate-900/60 border border-cyan-500/20 rounded-xl px-4 py-3 text-slate-200 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-cyan-400/30 focus:border-cyan-400/30 transition-all backdrop-blur-md shadow-inner"
             />
             <motion.button
               type="submit"
-              className="ripple px-6 py-3 bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-500 hover:to-blue-500 text-white font-medium rounded-xl transition-all duration-200 shadow-lg hover:shadow-cyan-500/25 flex items-center gap-2"
+              className="ripple px-6 py-3 bg-gradient-to-r from-teal-500 to-cyan-500 hover:from-teal-400 hover:to-cyan-400 text-white font-medium rounded-xl transition-all duration-200 shadow-lg hover:shadow-cyan-500/30 border border-cyan-400/20 flex items-center gap-2"
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
             >

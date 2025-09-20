@@ -135,11 +135,11 @@ const Stairs = ({ children }: StairsProps) => {
 
       <div ref={stairParentRef} className='h-screen w-full fixed z-[9999] top-0 hidden'>
         <div className='h-full w-full flex'>
-          <div className='stair h-full w-1/5 bg-gradient-to-b from-cyan-600 to-blue-800 will-change-transform'></div>
-          <div className='stair h-full w-1/5 bg-gradient-to-b from-blue-600 to-slate-800 will-change-transform'></div>
-          <div className='stair h-full w-1/5 bg-gradient-to-b from-slate-600 to-slate-900 will-change-transform'></div>
-          <div className='stair h-full w-1/5 bg-gradient-to-b from-blue-600 to-slate-800 will-change-transform'></div>
-          <div className='stair h-full w-1/5 bg-gradient-to-b from-cyan-600 to-blue-800 will-change-transform'></div>
+          <div className='stair h-full w-1/5 bg-gradient-to-b from-slate-950 to-slate-900 will-change-transform'></div>
+          <div className='stair h-full w-1/5 bg-gradient-to-b from-slate-900 to-slate-950 will-change-transform'></div>
+          <div className='stair h-full w-1/5 bg-gradient-to-b from-slate-900 to-slate-950 will-change-transform'></div>
+          <div className='stair h-full w-1/5 bg-gradient-to-b from-slate-900 to-slate-950 will-change-transform'></div>
+          <div className='stair h-full w-1/5 bg-gradient-to-b from-slate-950 to-slate-900 will-change-transform'></div>
         </div>
       </div>
       <div ref={pageRef}>
