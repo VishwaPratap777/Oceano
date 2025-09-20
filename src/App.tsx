@@ -23,7 +23,8 @@ const AppContent = () => {
   return (
     <div className="min-h-screen">
       <MouseRippleTrail />
-      <OceanBackground />
+      {/* Only show ocean background on non-home pages to avoid flash */}
+      {location.pathname !== '/' && <OceanBackground dim={isChatPage} />}
       <ScrollIndicators />
       {!isChatPage && <Navbar />}
       <AnimatePresence mode="wait">

@@ -1,7 +1,7 @@
 import { useEffect, useRef } from "react";
 import { gsap } from "gsap";
 
-const OceanBackground = () => {
+const OceanBackground = ({ dim = false }: { dim?: boolean }) => {
   const waveBack = useRef<HTMLDivElement>(null);
   const waveMid = useRef<HTMLDivElement>(null);
   const waveFront = useRef<HTMLDivElement>(null);
@@ -143,41 +143,41 @@ const OceanBackground = () => {
   return (
     <div className="fixed inset-0 z-0 pointer-events-none">
       {/* Dark ocean gradient background */}
-      <div className="absolute inset-0 bg-gradient-to-b from-slate-950 via-slate-900 to-teal-950" />
+      <div className="absolute inset-0 bg-gradient-to-b from-slate-950 via-slate-900 to-teal-950" style={{ opacity: dim ? 0.85 : 1 }} />
 
       {/* Soft vignette to improve text contrast */}
-      <div className="absolute inset-0 bg-gradient-to-t from-slate-950/30 via-transparent to-transparent" />
+      <div className="absolute inset-0 bg-gradient-to-t from-slate-950/30 via-transparent to-transparent" style={{ opacity: dim ? 0.6 : 1 }} />
 
       {/* Side bubble streams - keep center clear */}
-      <div ref={leftStreamRef} className="absolute inset-y-0 left-0 w-24 md:w-32 overflow-hidden">
+      <div ref={leftStreamRef} className="absolute inset-y-0 left-0 w-24 md:w-32 overflow-hidden" style={{ opacity: dim ? 0.15 : 1 }}>
         {Array.from({ length: 32 }).map((_, i) => (
           <span
             key={`l-${i}`}
-            className="side-bubble absolute rounded-full bg-cyan-200/34 border border-cyan-300/20 shadow-[0_0_12px_rgba(34,211,238,0.32)]"
+            className="side-bubble absolute rounded-full"
             style={{ left: `${Math.random()*60}%`, width: 8 + Math.random()*12, height: 8 + Math.random()*12 }}
           />
         ))}
       </div>
-      <div ref={rightStreamRef} className="absolute inset-y-0 right-0 w-24 md:w-32 overflow-hidden">
+      <div ref={rightStreamRef} className="absolute inset-y-0 right-0 w-24 md:w-32 overflow-hidden" style={{ opacity: dim ? 0.15 : 1 }}>
         {Array.from({ length: 32 }).map((_, i) => (
           <span
             key={`r-${i}`}
-            className="side-bubble absolute rounded-full bg-cyan-200/34 border border-cyan-300/20 shadow-[0_0_12px_rgba(34,211,238,0.32)]"
+            className="side-bubble absolute rounded-full"
             style={{ right: `${Math.random()*60}%`, width: 8 + Math.random()*12, height: 8 + Math.random()*12 }}
           />
         ))}
       </div>
 
       {/* Wave layers at bottom (slightly higher) */}
-      <div className="absolute inset-x-0 bottom-0 h-[52vh] md:h-[58vh]">
+      <div className="absolute inset-x-0 bottom-0 h-[52vh] md:h-[58vh]" style={{ opacity: dim ? 0.2 : 1 }}>
         <div className="absolute inset-0">
-          <WaveStrip color="#38bdf8" opacity={0.28} height="55%" refProp={waveBack} />
+          <WaveStrip color="#38bdf8" opacity={dim ? 0.08 : 0.28} height="55%" refProp={waveBack} />
         </div>
         <div className="absolute inset-0">
-          <WaveStrip color="#22d3ee" opacity={0.34} height="62%" refProp={waveMid} />
+          <WaveStrip color="#22d3ee" opacity={dim ? 0.10 : 0.34} height="62%" refProp={waveMid} />
         </div>
         <div className="absolute inset-0">
-          <WaveStrip color="#67e8f9" opacity={0.42} height="70%" refProp={waveFront} />
+          <WaveStrip color="#67e8f9" opacity={dim ? 0.12 : 0.42} height="70%" refProp={waveFront} />
         </div>
         {/* Subtle gradient fade at the very bottom */}
         <div className="absolute inset-x-0 bottom-0 h-14 bg-gradient-to-t from-slate-950/80 to-transparent" />

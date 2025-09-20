@@ -1,7 +1,7 @@
 import { Button } from "@/components/ui/button";
 import { ArrowRight, ChevronDown } from "lucide-react";
 import TransitionLink from "./TransitionLink";
-import { useRef, useState, lazy, Suspense, useCallback, memo } from "react";
+import { useRef, useState, lazy, Suspense, useCallback, memo, useEffect } from "react";
 import { useLocation } from "react-router-dom";
 import { motion, useScroll, useTransform } from "framer-motion";
 
@@ -17,7 +17,12 @@ const Hero = () => {
   const sectionRef = useRef<HTMLElement | null>(null);
   const [authOpen, setAuthOpen] = useState(false);
   const [videoLoaded, setVideoLoaded] = useState(false);
-  const [showContent, setShowContent] = useState(false);
+  const [videoCanPlay, setVideoCanPlay] = useState(false);
+  const [fontsReady, setFontsReady] = useState(false);
+  const [showContent, setShowContent] = useState(true);
+  const [stairsDone, setStairsDone] = useState(false);
+  const [startDrop, setStartDrop] = useState(false);
+  const videoRef = useRef<HTMLVideoElement | null>(null);
 
   // Handlers memoized to avoid re-creating functions for children
   const openAuth = useCallback(() => setAuthOpen(true), []);
@@ -26,9 +31,51 @@ const Hero = () => {
   // Handle video loading and content reveal
   const handleVideoLoad = useCallback(() => {
     setVideoLoaded(true);
-    // Small delay to ensure smooth transition
-    setTimeout(() => setShowContent(true), 300);
   }, []);
+
+  // Mark when video can play through to avoid initial flash
+  const handleCanPlayThrough = useCallback(() => {
+    setVideoCanPlay(true);
+  }, []);
+
+  // Wait for fonts to be ready to prevent layout shift
+  useEffect(() => {
+    let didCancel = false;
+    const ready = async () => {
+      try {
+        // @ts-ignore - fonts may not exist in some environments
+        if (document.fonts && document.fonts.ready) {
+          await (document as any).fonts.ready;
+        }
+      } finally {
+        if (!didCancel) setFontsReady(true);
+      }
+    };
+    ready();
+    return () => { didCancel = true; };
+  }, []);
+
+  // Listen for stairs completion to control when to start video
+  useEffect(() => {
+    const onStairsComplete = () => {
+      setStairsDone(true);
+      // Try to start video playback when stairs end
+      if (videoRef.current) {
+        try { videoRef.current.play(); } catch {}
+      }
+    };
+    window.addEventListener('stairs:complete', onStairsComplete);
+    return () => window.removeEventListener('stairs:complete', onStairsComplete);
+  }, []);
+
+  // Allow video to play under the transition; no pause gating
+
+  // Small delay after stairs complete before triggering drop animations
+  useEffect(() => {
+    if (!stairsDone) return;
+    const id = window.setTimeout(() => setStartDrop(true), 150);
+    return () => window.clearTimeout(id);
+  }, [stairsDone]);
 
   // Scroll progress for parallax effects
   const { scrollYProgress } = useScroll({ 
@@ -57,12 +104,15 @@ const Hero = () => {
       
       {/* Video Background */}
       <video
+        ref={videoRef}
         className="absolute inset-0 w-full h-full object-cover"
         autoPlay
         muted
         loop
         playsInline
+        preload="auto"
         onLoadedData={handleVideoLoad}
+        onCanPlayThrough={handleCanPlayThrough}
         style={{ 
           objectPosition: 'center center',
           objectFit: 'cover',
@@ -81,11 +131,30 @@ const Hero = () => {
           padding: 0,
           border: 'none',
           outline: 'none',
-          zIndex: 0
+          zIndex: 0,
+          opacity: 1,
+          transition: 'opacity 500ms ease',
+          willChange: 'opacity, transform',
+          transform: 'translateZ(0)',
+          backfaceVisibility: 'hidden'
         }}
       >
         <source src="/seav.mp4" type="video/mp4" />
       </video>
+
+      {/* Poster overlay (frame1.jpg) above the video to prevent any flash before ready */}
+      <div
+        className="absolute inset-0"
+        style={{
+          backgroundImage: "url('/frame1.jpg')",
+          backgroundSize: 'cover',
+          backgroundPosition: 'center',
+          opacity: videoCanPlay ? 0 : 1,
+          transition: 'opacity 400ms ease',
+          zIndex: 5,
+          pointerEvents: 'none'
+        }}
+      />
       
       {/* Dark Overlay above video */}
       <div className="absolute inset-0 bg-black/40" style={{ zIndex: 10 }} />
@@ -150,17 +219,17 @@ const Hero = () => {
       {/* Main Content Overlay - only show after video loads */}
       {showContent && (
         <motion.div 
-          initial={{ opacity: 0, y: 20 }}
+          initial={{ opacity: 1, y: 0 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.8, ease: "easeOut" }}
+          transition={{ duration: 0.3 }}
           className="absolute inset-0 flex flex-col items-center justify-center text-center px-6 max-w-6xl mx-auto"
           style={{ height: '100vh', width: '100vw', zIndex: 30 }}
         >
           {/* Main Heading with Ocean Background Clipped Text */}
           <motion.div
-            initial={{ opacity: 0, y: 30 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.8 }}
+            initial={{ opacity: 1, y: 80 }}
+            animate={{ opacity: 1, y: startDrop ? 0 : 80 }}
+            transition={{ type: 'spring', stiffness: 180, damping: 20, mass: 1.0 }}
             className="mb-4 text-center mt-6"
           >
             <motion.h1 
@@ -195,9 +264,9 @@ const Hero = () => {
 
           {/* Subtitle */}
           <motion.p 
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.8, delay: 0.3 }}
+            initial={{ opacity: 1, y: 60 }}
+            animate={{ opacity: 1, y: startDrop ? 0 : 60 }}
+            transition={{ type: 'spring', stiffness: 175, damping: 22, mass: 1.0, delay: 0.06 }}
             className="text-xl sm:text-2xl md:text-3xl text-white font-light mt-2 mb-6 max-w-4xl mx-auto leading-relaxed drop-shadow-xl"
             style={{
               textShadow: '0 0 15px rgba(0, 0, 0, 0.8), 0 0 30px rgba(0, 0, 0, 0.6), 0 0 45px rgba(0, 0, 0, 0.4)'
@@ -208,9 +277,9 @@ const Hero = () => {
 
           {/* CTA Buttons */}
           <motion.div 
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.8, delay: 0.5 }}
+            initial={{ opacity: 1, y: 50 }}
+            animate={{ opacity: 1, y: startDrop ? 0 : 50 }}
+            transition={{ type: 'spring', stiffness: 185, damping: 20, mass: 1.0, delay: 0.12 }}
             className="flex flex-col sm:flex-row gap-3 justify-center items-center mb-4 md:mb-6"
           >
             <TransitionLink to="/chat" variant="none">

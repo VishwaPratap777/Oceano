@@ -8,6 +8,7 @@ interface StairsProps {
 
 const Stairs = ({ children }: StairsProps) => {
   const currentPath = useLocation().pathname
+  const SHOW_INTRO_LOADER = true;
 
   const stairParentRef = useRef<HTMLDivElement>(null)
   const pageRef = useRef<HTMLDivElement>(null)
@@ -30,21 +31,44 @@ const Stairs = ({ children }: StairsProps) => {
     // Reset initial state
     gsap.set(parent, { display: 'none' })
     gsap.set(bars, { clearProps: 'all', yPercent: 0 })
-    // Render page behind transitions to avoid layout jerk
-    gsap.set(page, { opacity: 0, y: 20, filter: 'blur(8px)', scale: 1.01 })
+    // Ensure page is visible behind the stairs so the overlay reveals actual content
+    gsap.set(page, { opacity: 1, y: 0, filter: 'blur(0px)', scale: 1 })
     if (loader) gsap.set(loader, { display: 'none', opacity: 0 })
 
     const tl = gsap.timeline({ defaults: { ease: 'power3.out' } })
 
-    // 1) Intro overlay loader (~3s) BEFORE stairs — show ONLY on first visit to HOME per session
+    // 1) Intro overlay loader (~3s) BEFORE stairs — disabled to avoid blank/black screen
     const seenKey = 'hasSeenHomeLoader';
     const hasSeenHomeLoader = typeof window !== 'undefined' && sessionStorage.getItem(seenKey) === 'true';
-    if (loader && currentPath === '/' && !hasSeenHomeLoader) {
+    if (SHOW_INTRO_LOADER && loader && currentPath === '/' && !hasSeenHomeLoader) {
       tl.set(loader, { display: 'flex', opacity: 0 })
         .to(loader, { opacity: 1, duration: 0.35 }) // fade in
         .to({}, { duration: 2.3 }) // sustain effect visible
-        .to(loader, { opacity: 0, duration: 0.35 }) // fade out
-        .set(loader, { display: 'none' });
+        // Begin fade-out and stairs at the same time for overlap
+        .addLabel('loaderFadeOutStart')
+        .to(loader, { opacity: 0, duration: 0.8 }, 'loaderFadeOutStart') // fade out loader (longer)
+        .to(parent, { display: 'block', duration: 0 }, 'loaderFadeOutStart') // show stairs container under loader
+        .add(() => { try { window.dispatchEvent(new Event('stairs:start')) } catch {} }, 'loaderFadeOutStart')
+        .from(bars, {
+          height: 0,
+          duration: 0.45,
+          ease: 'power4.out',
+          stagger: { amount: -0.2 },
+        }, 'loaderFadeOutStart+=0.00')
+        .addLabel('stairsBarsOutStart')
+        .to(bars, {
+          yPercent: 100,
+          duration: 0.7,
+          ease: 'sine.out',
+          stagger: { amount: -0.25 },
+        }, 'stairsBarsOutStart')
+        // Mid-way cue for content drop to begin under the overlay
+        .add(() => { try { window.dispatchEvent(new Event('stairs:mid')) } catch {} }, 'stairsBarsOutStart+=0.35')
+        // Fire completion slightly before fully done for a touch of overlap
+        .add(() => { try { window.dispatchEvent(new Event('stairs:complete')) } catch {} }, '>-0.25')
+        .set(loader, { display: 'none' })
+        .to(parent, { display: 'none', duration: 0 })
+        .set(bars, { yPercent: 0 });
 
       // Animate watery effect attributes during the loader
       if (turb) {
@@ -73,28 +97,36 @@ const Stairs = ({ children }: StairsProps) => {
       }
     }
 
-    // 2) Now play the stairs transition
-    tl.to(parent, { display: 'block', duration: 0 })
-      .from(bars, {
-        height: 0,
-        duration: 0.45,
-        ease: 'power4.out', // quick snap-in
-        stagger: { amount: -0.2 },
-      })
-      .to(bars, {
-        yPercent: 100,
-        duration: 0.7,
-        ease: 'sine.out', // smooth glide out
-        stagger: { amount: -0.25 },
-      })
-      .to(parent, { display: 'none', duration: 0 })
-      .set(bars, { yPercent: 0 })
-      // 3) Fluid page reveal (fast-in then settle)
-      .fromTo(page,
-        { opacity: 0, y: 20, filter: 'blur(8px)', scale: 1.01 },
-        { opacity: 1, y: 0, filter: 'blur(0px)', scale: 1, duration: 1.0, ease: 'power2.out', clearProps: 'transform,opacity,filter' }
-      )
-      .to(page, { y: 0, duration: 0.8, ease: 'sine.out' }, '>-0.7')
+    // 2) If loader didn't run (subsequent visits), still run stairs normally
+    else {
+      tl.add(() => {
+          try { window.dispatchEvent(new Event('stairs:start')) } catch {}
+        })
+        .to(parent, { display: 'block', duration: 0 })
+        .from(bars, {
+          height: 0,
+          duration: 0.45,
+          ease: 'power4.out', // quick snap-in
+          stagger: { amount: -0.2 },
+        })
+        .addLabel('stairsBarsOutStart')
+        .to(bars, {
+          yPercent: 100,
+          duration: 0.7,
+          ease: 'sine.out', // smooth glide out
+          stagger: { amount: -0.25 },
+        }, 'stairsBarsOutStart')
+        // Mid-way cue for content drop to begin under the overlay
+        .add(() => { try { window.dispatchEvent(new Event('stairs:mid')) } catch {} }, 'stairsBarsOutStart+=0.35')
+        // Signal completion a bit earlier before the overlay fully hides (more overlap)
+        .add(() => {
+          try {
+            window.dispatchEvent(new Event('stairs:complete'))
+          } catch {}
+        }, '>-0.25')
+        .to(parent, { display: 'none', duration: 0 })
+        .set(bars, { yPercent: 0 })
+    }
 
     return () => {
       tl.kill()
@@ -109,7 +141,7 @@ const Stairs = ({ children }: StairsProps) => {
       {/* Intro overlay loader BEFORE stairs */}
       <div
         ref={loaderRef}
-        className='fixed inset-0 z-[10000] hidden items-center justify-center bg-slate-950/95 backdrop-blur-sm'
+        className='fixed inset-0 z-[10000] hidden items-center justify-center bg-slate-950'
       >
         {/* Inline SVG filter for watery effect */}
         <svg width="0" height="0" className='absolute'>
