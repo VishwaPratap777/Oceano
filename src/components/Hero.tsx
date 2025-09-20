@@ -80,18 +80,19 @@ const Hero = () => {
           margin: 0,
           padding: 0,
           border: 'none',
-          outline: 'none'
+          outline: 'none',
+          zIndex: 0
         }}
       >
         <source src="/seav.mp4" type="video/mp4" />
       </video>
       
-      {/* Dark Overlay */}
-      <div className="absolute inset-0 bg-black/40" />
+      {/* Dark Overlay above video */}
+      <div className="absolute inset-0 bg-black/40" style={{ zIndex: 10 }} />
       
       {/* Floating particles - only show after video loads */}
       {videoLoaded && (
-        <div className="absolute inset-0">
+        <div className="absolute inset-0" style={{ zIndex: 20 }}>
           {[...Array(15)].map((_, i) => (
             <motion.div
               key={i}
@@ -115,8 +116,8 @@ const Hero = () => {
         </div>
       )}
 
-      {/* Navigation */}
-      <div className="absolute top-0 left-0 right-0 z-20 p-8">
+      {/* Navigation above overlays and particles */}
+      <div className="absolute top-0 left-0 right-0 p-8" style={{ zIndex: 30 }}>
         <div className="flex justify-between items-center">
           <motion.div 
             initial={{ opacity: 0, x: -20 }}
@@ -152,8 +153,8 @@ const Hero = () => {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.8, ease: "easeOut" }}
-          className="absolute inset-0 z-20 flex flex-col items-center justify-center text-center px-6 max-w-6xl mx-auto"
-          style={{ height: '100vh', width: '100vw' }}
+          className="absolute inset-0 flex flex-col items-center justify-center text-center px-6 max-w-6xl mx-auto"
+          style={{ height: '100vh', width: '100vw', zIndex: 30 }}
         >
           {/* Main Heading with Ocean Background Clipped Text */}
           <motion.div
@@ -212,7 +213,7 @@ const Hero = () => {
             transition={{ duration: 0.8, delay: 0.5 }}
             className="flex flex-col sm:flex-row gap-3 justify-center items-center mb-4 md:mb-6"
           >
-            <TransitionLink to="/chat" variant="fade">
+            <TransitionLink to="/chat" variant="none">
               <Button 
                 variant="ocean" 
                 size="lg"
@@ -223,7 +224,7 @@ const Hero = () => {
               </Button>
             </TransitionLink>
             
-            <TransitionLink to="/learn" variant="fade">
+            <TransitionLink to="/learn" variant="none">
               <Button 
                 variant="outline" 
                 size="lg"
