@@ -22,7 +22,7 @@ const TransitionOverlay = ({ isVisible, onComplete, variant = "ripple", showLoad
       // GSAP timeline for cinematic effect
       const tl = gsap.timeline({
         onComplete: () => {
-          setTimeout(onComplete, 100); // Reduced delay for smoother transition
+          setTimeout(onComplete, 300); // Reduced delay for smoother transition
         }
       });
 
@@ -32,19 +32,19 @@ const TransitionOverlay = ({ isVisible, onComplete, variant = "ripple", showLoad
           .to(overlay, { 
             scale: 1, 
             opacity: 1, 
-            duration: 0.5, 
+            duration: 0.6, 
             ease: "power3.out" 
           })
           .to(ripple, {
             scale: 1.2,
             opacity: 0.8,
-            duration: 0.35,
+            duration: 1,
             ease: "power3.inOut"
           }, "-=0.15")
           .to(ripple, {
             scale: 1.4,
             opacity: 0,
-            duration: 0.25,
+            duration: 1,
             ease: "power3.out"
           }, "-=0.1");
       } else if (variant === "fade") {
@@ -52,7 +52,7 @@ const TransitionOverlay = ({ isVisible, onComplete, variant = "ripple", showLoad
         tl.set(overlay, { opacity: 0 })
           .to(overlay, { 
             opacity: 1, 
-            duration: 0.4, 
+            duration: 1, 
             ease: "power3.out" 
           });
       } else if (variant === "slide") {

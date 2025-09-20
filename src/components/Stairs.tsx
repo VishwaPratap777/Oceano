@@ -94,7 +94,7 @@ const Stairs = ({ children }: StairsProps) => {
         { opacity: 0, y: 20, filter: 'blur(8px)', scale: 1.01 },
         { opacity: 1, y: 0, filter: 'blur(0px)', scale: 1, duration: 1.0, ease: 'power2.out', clearProps: 'transform,opacity,filter' }
       )
-      .to(page, { y: 0, duration: 0.8, ease: 'sine.out' }, '>-0.2')
+      .to(page, { y: 0, duration: 0.8, ease: 'sine.out' }, '>-0.7')
 
     return () => {
       tl.kill()
@@ -124,7 +124,7 @@ const Stairs = ({ children }: StairsProps) => {
         <div className='relative flex items-center justify-center'>
           <div
             ref={logoRef}
-            className='relative text-5xl md:text-6xl font-extrabold tracking-tight select-none will-change-transform'
+            className='relative text-5xl md:text-4xl font-extrabold tracking-tight select-none will-change-transform'
             style={{ filter: 'url(#stairsWaterFilter)' }}
           >
             <span className='text-primary'>Ocean</span>
@@ -135,11 +135,11 @@ const Stairs = ({ children }: StairsProps) => {
 
       <div ref={stairParentRef} className='h-screen w-full fixed z-[9999] top-0 hidden'>
         <div className='h-full w-full flex'>
-          <div className='stair h-full w-1/5 bg-gradient-to-b from-slate-950 to-slate-900 will-change-transform'></div>
-          <div className='stair h-full w-1/5 bg-gradient-to-b from-slate-900 to-slate-950 will-change-transform'></div>
-          <div className='stair h-full w-1/5 bg-gradient-to-b from-slate-900 to-slate-950 will-change-transform'></div>
-          <div className='stair h-full w-1/5 bg-gradient-to-b from-slate-900 to-slate-950 will-change-transform'></div>
-          <div className='stair h-full w-1/5 bg-gradient-to-b from-slate-950 to-slate-900 will-change-transform'></div>
+          <div className='stair h-full w-1/5 bg-gradient-to-b from-cyan-600 to-blue-800 will-change-transform'></div>
+          <div className='stair h-full w-1/5 bg-gradient-to-b from-blue-600 to-slate-800 will-change-transform'></div>
+          <div className='stair h-full w-1/5 bg-gradient-to-b from-slate-600 to-slate-900 will-change-transform'></div>
+          <div className='stair h-full w-1/5 bg-gradient-to-b from-blue-600 to-slate-800 will-change-transform'></div>
+          <div className='stair h-full w-1/5 bg-gradient-to-b from-cyan-600 to-blue-800 will-change-transform'></div>
         </div>
       </div>
       <div ref={pageRef}>

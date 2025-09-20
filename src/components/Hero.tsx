@@ -135,7 +135,7 @@ const Hero = () => {
 
             {/* CTA Buttons */}
             <div className="flex flex-col sm:flex-row gap-3 justify-center items-center mb-8 md:mb-10">
-              <TransitionLink to="/chat" variant="fade">
+              <TransitionLink to="/chat" variant="stagger">
                 <Button 
                   variant="ocean" 
                   size="lg"
@@ -146,7 +146,7 @@ const Hero = () => {
                 </Button>
               </TransitionLink>
               
-              <TransitionLink to="/learn" variant="fade">
+              <TransitionLink to="/learn" variant="stagger">
                 <Button 
                   variant="outline" 
                   size="lg"
