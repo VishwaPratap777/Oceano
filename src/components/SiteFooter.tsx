@@ -27,11 +27,18 @@ const SiteFooter = () => {
   ), []);
 
   return (
-    <footer className="relative w-full px-4 pt-16 pb-20 md:pt-20 md:pb-24 bg-gradient-to-t from-slate-950 via-slate-900/70 to-transparent border-t border-slate-800/40 overflow-hidden">
+    <footer className="relative w-full px-4 pt-16 pb-20 md:pt-20 md:pb-24 bg-gradient-to-t from-slate-950 via-slate-900/60 to-transparent border-t border-slate-800/40 overflow-hidden">
+      {/* Local keyframes for wave strip animation */}
+      <style>{`
+        @keyframes waveSlide {
+          from { transform: translateX(0); }
+          to { transform: translateX(-50%); }
+        }
+      `}</style>
       {/* Bubble background integrated */}
       <div className="absolute inset-0 pointer-events-none">
-        {/* dark gradient to simulate ocean floor */}
-        <div className="absolute inset-0 bg-gradient-to-t from-slate-950/80 via-slate-900/50 to-transparent" />
+        {/* dark gradient to simulate ocean floor (neutral slate, no green tint) */}
+        <div className="absolute inset-0 bg-gradient-to-t from-slate-950/85 via-slate-900/50 to-transparent" />
         <div className="absolute inset-0 overflow-hidden">
           {bubbles.map(b => (
             <motion.span
@@ -93,6 +100,110 @@ const SiteFooter = () => {
           <LinkItem href="#">Terms</LinkItem>
         </div>
       </div>
+
+      {/* Hardcoded animated wave SVGs at the very bottom of the footer */}
+      <div className="absolute inset-x-0 bottom-0 h-80 md:h-96 pointer-events-none" aria-hidden>
+        {/* Layer 1 (back, darkest, lower height) */}
+        <div className="absolute inset-x-0 bottom-0" style={{ height: '55%', opacity: 0.95 }}>
+          <div className="flex" style={{ width: '200%', animation: 'waveSlide 46s linear infinite' }}>
+            <svg className="w-1/2 h-full" viewBox="0 0 1440 320" preserveAspectRatio="none">
+              <path d="M0,230 C180,210 360,250 540,230 C720,210 900,250 1080,230 C1260,210 1440,240 1440,240 L1440,320 L0,320 Z" fill="#0b3a58" fillOpacity={0.55} />
+            </svg>
+            <svg className="w-1/2 h-full" viewBox="0 0 1440 320" preserveAspectRatio="none">
+              <path d="M0,230 C180,210 360,250 540,230 C720,210 900,250 1080,230 C1260,210 1440,240 1440,240 L1440,320 L0,320 Z" fill="#0b3a58" fillOpacity={0.55} />
+            </svg>
+          </div>
+        </div>
+        {/* Layer 2 (mid-dark, taller) */}
+        <div className="absolute inset-x-0 bottom-0" style={{ height: '66%', opacity: 0.96 }}>
+          <div className="flex" style={{ width: '200%', animation: 'waveSlide 28s linear infinite' }}>
+            <svg className="w-1/2 h-full" viewBox="0 0 1440 320" preserveAspectRatio="none">
+              <path d="M0,230 C180,210 360,250 540,230 C720,210 900,250 1080,230 C1260,210 1440,240 1440,240 L1440,320 L0,320 Z" fill="#0a3b5a" fillOpacity={0.6} />
+            </svg>
+            <svg className="w-1/2 h-full" viewBox="0 0 1440 320" preserveAspectRatio="none">
+              <path d="M0,230 C180,210 360,250 540,230 C720,210 900,250 1080,230 C1260,210 1440,240 1440,240 L1440,320 L0,320 Z" fill="#0a3b5a" fillOpacity={0.6} />
+            </svg>
+          </div>
+        </div>
+        {/* Layer 3 (mid, taller) */}
+        <div className="absolute inset-x-0 bottom-0" style={{ height: '78%', opacity: 0.98 }}>
+          <div className="flex" style={{ width: '200%', animation: 'waveSlide 18s linear infinite' }}>
+            <svg className="w-1/2 h-full" viewBox="0 0 1440 320" preserveAspectRatio="none">
+              <path d="M0,230 C180,210 360,250 540,230 C720,210 900,250 1080,230 C1260,210 1440,240 1440,240 L1440,320 L0,320 Z" fill="#093a56" fillOpacity={0.65} />
+            </svg>
+            <svg className="w-1/2 h-full" viewBox="0 0 1440 320" preserveAspectRatio="none">
+              <path d="M0,230 C180,210 360,250 540,230 C720,210 900,250 1080,230 C1260,210 1440,240 1440,240 L1440,320 L0,320 Z" fill="#093a56" fillOpacity={0.65} />
+            </svg>
+          </div>
+        </div>
+        {/* Layer 4 (front, tallest) */}
+        <div className="absolute inset-x-0 bottom-0" style={{ height: '88%', opacity: 1 }}>
+          <div className="flex" style={{ width: '200%', animation: 'waveSlide 12s linear infinite' }}>
+            <svg className="w-1/2 h-full" viewBox="0 0 1440 320" preserveAspectRatio="none">
+              <path d="M0,230 C180,210 360,250 540,230 C720,210 900,250 1080,230 C1260,210 1440,240 1440,240 L1440,320 L0,320 Z" fill="#082f49" fillOpacity={0.72} />
+            </svg>
+            <svg className="w-1/2 h-full" viewBox="0 0 1440 320" preserveAspectRatio="none">
+              <path d="M0,230 C180,210 360,250 540,230 C720,210 900,250 1080,230 C1260,210 1440,240 1440,240 L1440,320 L0,320 Z" fill="#082f49" fillOpacity={0.72} />
+            </svg>
+          </div>
+        </div>
+        {/* Extra micro-layers for added richness (slightly less than the tallest) */}
+        <div className="absolute inset-x-0 bottom-0" style={{ height: '84%', opacity: 0.85 }}>
+          <div className="flex" style={{ width: '200%', animation: 'waveSlide 16s linear infinite' }}>
+            <svg className="w-1/2 h-full" viewBox="0 0 1440 320" preserveAspectRatio="none">
+              <path d="M0,230 C180,210 360,250 540,230 C720,210 900,250 1080,230 C1260,210 1440,240 1440,240 L1440,320 L0,320 Z" fill="#0b4566" fillOpacity={0.5} />
+            </svg>
+            <svg className="w-1/2 h-full" viewBox="0 0 1440 320" preserveAspectRatio="none">
+              <path d="M0,230 C180,210 360,250 540,230 C720,210 900,250 1080,230 C1260,210 1440,240 1440,240 L1440,320 L0,320 Z" fill="#0b4566" fillOpacity={0.5} />
+            </svg>
+          </div>
+        </div>
+        <div className="absolute inset-x-0 bottom-0" style={{ height: '80%', opacity: 0.9 }}>
+          <div className="flex" style={{ width: '200%', animation: 'waveSlide 20s linear infinite' }}>
+            <svg className="w-1/2 h-full" viewBox="0 0 1440 320" preserveAspectRatio="none">
+              <path d="M0,230 C180,210 360,250 540,230 C720,210 900,250 1080,230 C1260,210 1440,240 1440,240 L1440,320 L0,320 Z" fill="#0a3852" fillOpacity={0.55} />
+            </svg>
+            <svg className="w-1/2 h-full" viewBox="0 0 1440 320" preserveAspectRatio="none">
+              <path d="M0,230 C180,210 360,250 540,230 C720,210 900,250 1080,230 C1260,210 1440,240 1440,240 L1440,320 L0,320 Z" fill="#0a3852" fillOpacity={0.55} />
+            </svg>
+          </div>
+        </div>
+        <div className="absolute inset-x-0 bottom-0" style={{ height: '74%', opacity: 0.92 }}>
+          <div className="flex" style={{ width: '200%', animation: 'waveSlide 24s linear infinite' }}>
+            <svg className="w-1/2 h-full" viewBox="0 0 1440 320" preserveAspectRatio="none">
+              <path d="M0,230 C180,210 360,250 540,230 C720,210 900,250 1080,230 C1260,210 1440,240 1440,240 L1440,320 L0,320 Z" fill="#0b2f49" fillOpacity={0.58} />
+            </svg>
+            <svg className="w-1/2 h-full" viewBox="0 0 1440 320" preserveAspectRatio="none">
+              <path d="M0,230 C180,210 360,250 540,230 C720,210 900,250 1080,230 C1260,210 1440,240 1440,240 L1440,320 L0,320 Z" fill="#0b2f49" fillOpacity={0.58} />
+            </svg>
+          </div>
+        </div>
+        <div className="absolute inset-x-0 bottom-0" style={{ height: '68%', opacity: 0.94 }}>
+          <div className="flex" style={{ width: '200%', animation: 'waveSlide 32s linear infinite' }}>
+            <svg className="w-1/2 h-full" viewBox="0 0 1440 320" preserveAspectRatio="none">
+              <path d="M0,230 C180,210 360,250 540,230 C720,210 900,250 1080,230 C1260,210 1440,240 1440,240 L1440,320 L0,320 Z" fill="#0a2940" fillOpacity={0.6} />
+            </svg>
+            <svg className="w-1/2 h-full" viewBox="0 0 1440 320" preserveAspectRatio="none">
+              <path d="M0,230 C180,210 360,250 540,230 C720,210 900,250 1080,230 C1260,210 1440,240 1440,240 L1440,320 L0,320 Z" fill="#0a2940" fillOpacity={0.6} />
+            </svg>
+          </div>
+        </div>
+        {/* Bottom fade to floor */}
+        <div className="absolute inset-x-0 bottom-0 h-10 bg-gradient-to-t from-slate-950 to-transparent" />
+        {/* Soft top fade to blend waves into footer content */}
+        <div className="absolute inset-x-0 top-0 h-12 md:h-16 bg-gradient-to-b from-transparent to-slate-900/70" />
+      </div>
+
+      {/* Subtle grain overlay for texture */}
+      <div
+        className="absolute inset-0 pointer-events-none mix-blend-soft-light opacity-10"
+        style={{
+          backgroundImage:
+            "radial-gradient(ellipse at center, rgba(255,255,255,0.06) 0%, rgba(0,0,0,0) 70%), repeating-linear-gradient(0deg, rgba(255,255,255,0.03) 0, rgba(255,255,255,0.03) 1px, transparent 1px, transparent 2px)",
+          backgroundSize: "120% 120%, 8px 8px",
+          backgroundPosition: "center, 0 0",
+        }}
+      />
     </footer>
   );
 };

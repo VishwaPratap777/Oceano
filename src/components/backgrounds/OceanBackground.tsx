@@ -1,7 +1,7 @@
 import { useEffect, useRef } from "react";
 import { gsap } from "gsap";
 
-const OceanBackground = ({ dim = false }: { dim?: boolean }) => {
+const OceanBackground = ({ dim = false, showGradient = true, zIndex = 0 }: { dim?: boolean; showGradient?: boolean; zIndex?: number }) => {
   const waveBack = useRef<HTMLDivElement>(null);
   const waveMid = useRef<HTMLDivElement>(null);
   const waveFront = useRef<HTMLDivElement>(null);
@@ -141,12 +141,15 @@ const OceanBackground = ({ dim = false }: { dim?: boolean }) => {
   );
 
   return (
-    <div className="fixed inset-0 z-0 pointer-events-none">
+    <div className="fixed inset-0 pointer-events-none" style={{ zIndex }}>
       {/* Dark ocean gradient background */}
-      <div className="absolute inset-0 bg-gradient-to-b from-slate-950 via-slate-900 to-teal-950" style={{ opacity: dim ? 0.85 : 1 }} />
-
-      {/* Soft vignette to improve text contrast */}
-      <div className="absolute inset-0 bg-gradient-to-t from-slate-950/30 via-transparent to-transparent" style={{ opacity: dim ? 0.6 : 1 }} />
+      {showGradient && (
+        <>
+          <div className="absolute inset-0 bg-gradient-to-b from-slate-950 via-slate-900 to-teal-950" style={{ opacity: dim ? 0.85 : 1 }} />
+          {/* Soft vignette to improve text contrast */}
+          <div className="absolute inset-0 bg-gradient-to-t from-slate-950/30 via-transparent to-transparent" style={{ opacity: dim ? 0.6 : 1 }} />
+        </>
+      )}
 
       {/* Side bubble streams - keep center clear */}
       <div ref={leftStreamRef} className="absolute inset-y-0 left-0 w-24 md:w-32 overflow-hidden" style={{ opacity: dim ? 0.15 : 1 }}>

@@ -3,6 +3,7 @@ import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route, useLocation } from "react-router-dom";
+import { useEffect, useRef, useState } from "react";
 import Index from "./pages/Index";
 import Chat from "./pages/Chat";
 import NotFound from "./pages/NotFound";
@@ -10,6 +11,7 @@ import Navbar from "./components/Navbar";
 import PageTransitionWrapper from "./components/PageTransitionWrapper";
 import { AnimatePresence } from "framer-motion";
 import Learn from "./pages/Learn";
+import Login from "./pages/Login";
 import MouseRippleTrail from "./components/effects/MouseRippleTrail";
 import ScrollIndicators from "@/components/scroll/ScrollIndicators";
 import OceanBackground from "@/components/backgrounds/OceanBackground";
@@ -19,12 +21,44 @@ const queryClient = new QueryClient();
 const AppContent = () => {
   const location = useLocation();
   const isChatPage = location.pathname === '/chat';
+  const isHome = location.pathname === '/';
+  
+  // Waves should be hidden on the hero (home) until scrolled past 10vh; visible on all other routes
+  const initialShow = () => {
+    if (!isHome) return true;
+    if (typeof window === 'undefined') return false;
+    return window.scrollY > window.innerHeight * 0.1;
+  };
+  const [showWaves, setShowWaves] = useState<boolean>(initialShow);
+  const rafRef = useRef<number | null>(null);
+
+  useEffect(() => {
+    if (!isHome) {
+      setShowWaves(true);
+      return;
+    }
+    const onScroll = () => {
+      if (rafRef.current) return;
+      rafRef.current = window.requestAnimationFrame(() => {
+        rafRef.current = null;
+        setShowWaves(window.scrollY > window.innerHeight * 0.1);
+      });
+    };
+    setShowWaves(window.scrollY > window.innerHeight * 0.1);
+    window.addEventListener('scroll', onScroll, { passive: true });
+    return () => {
+      window.removeEventListener('scroll', onScroll as any);
+      if (rafRef.current) cancelAnimationFrame(rafRef.current);
+    };
+  }, [isHome]);
 
   return (
     <div className="min-h-screen">
       <MouseRippleTrail />
-      {/* Only show ocean background on non-home pages to avoid flash */}
-      {location.pathname !== '/' && <OceanBackground dim={isChatPage} />}
+      {/* Waves are hidden on the hero until scroll > 10vh; visible on all other routes */}
+      {showWaves && (
+        <OceanBackground dim={isChatPage} />
+      )}
       <ScrollIndicators />
       {!isChatPage && <Navbar />}
       <AnimatePresence mode="wait">
@@ -52,6 +86,11 @@ const AppContent = () => {
           <Route path="/chat" element={
             <PageTransitionWrapper variant="stairs">
               <Chat />
+            </PageTransitionWrapper>
+          } />
+          <Route path="/login" element={
+            <PageTransitionWrapper variant="stairs">
+              <Login />
             </PageTransitionWrapper>
           } />
           <Route path="/learn" element={
