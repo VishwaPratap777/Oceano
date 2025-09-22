@@ -29,12 +29,43 @@ const Hero = () => {
   // Masked hero text: manage seamless loop via crossfade between two videos
   const v0Ref = useRef<HTMLVideoElement | null>(null);
   const v1Ref = useRef<HTMLVideoElement | null>(null);
+  const v0DurRef = useRef<number>(0);
+  const v1DurRef = useRef<number>(0);
+  const cfTimerRef = useRef<number | null>(null);
   const [activeVid, setActiveVid] = useState<0 | 1>(0);
   const [vidOpacities, setVidOpacities] = useState<[number, number]>([1, 0]);
-  const crossfadeMs = 700;
+  // Slightly longer crossfade for seamless loop
+  const crossfadeMs = 1200;
+
+  // Ensure both masked videos are playing (muted + inline allows autoplay). This avoids stalls after one iteration.
+  useEffect(() => {
+    const v0 = v0Ref.current;
+    const v1 = v1Ref.current;
+    const playSafe = (v?: HTMLVideoElement | null) => {
+      if (!v) return;
+      try { v.play().catch(() => {}); } catch {}
+    };
+    playSafe(v0);
+    playSafe(v1);
+  }, []);
+
+  // Helper: schedule a crossfade just before the current active video ends
+  const scheduleCrossfade = useCallback(() => {
+    const a = activeVid === 0 ? v0Ref.current : v1Ref.current;
+    const d = activeVid === 0 ? v0DurRef.current : v1DurRef.current;
+    if (!a || !isFinite(d) || d <= 0) return;
+    const needed = crossfadeMs / 1000 + 0.35; // safety margin
+    const remaining = Math.max(0, d - a.currentTime);
+    const fireInMs = Math.max(50, (remaining - needed) * 1000);
+    if (cfTimerRef.current) window.clearTimeout(cfTimerRef.current);
+    cfTimerRef.current = window.setTimeout(() => {
+      // trigger startCrossfade via synthetic branch by nudging timeupdate handler logic
+      try { a.currentTime = Math.min(a.duration - needed + 0.01, a.duration - 0.05); } catch {}
+    }, fireInMs);
+  }, [activeVid, crossfadeMs]);
 
   // Smoothly ramp volume to avoid pops on unmute
-  const rampVolume = useCallback((target: number, durationMs = 500) => {
+  const rampVolume = useCallback((target: number, durationMs = 1000) => {
     const a = audioRef.current;
     if (!a) return;
     const start = a.volume;
@@ -160,38 +191,79 @@ const Hero = () => {
     setVidOpacities(activeVid === 0 ? [1, 0] : [0, 1]);
   }, [activeVid]);
 
-  // Crossfade near the end of the active video to avoid any black frame
+  // Crossfade near the end of the active video with priming to avoid any black frame
   useEffect(() => {
     const a = activeVid === 0 ? v0Ref.current : v1Ref.current;
     const b = activeVid === 0 ? v1Ref.current : v0Ref.current;
     if (!a || !b) return;
 
     let isFading = false;
+    let started = false;
+    const startCrossfade = () => {
+      if (isFading) return;
+      isFading = true;
+      try {
+        if (!started) {
+          b.currentTime = 0.01;
+          b.play().catch(() => {});
+          started = true;
+        }
+      } catch {}
+      // swap opacities to reveal next video
+      setVidOpacities(activeVid === 0 ? [0, 1] : [1, 0]);
+      window.setTimeout(() => {
+        setActiveVid(activeVid === 0 ? 1 : 0);
+      }, crossfadeMs);
+    };
+
     const onTimeUpdate = () => {
       const d = a.duration;
       if (!isFinite(d) || d <= 0) return;
       const t = a.currentTime;
       const remaining = d - t;
-      if (!isFading && remaining <= crossfadeMs / 1000 + 0.05) {
-        isFading = true;
+      const needed = crossfadeMs / 1000 + 0.35; // slightly larger safety margin
+      if (!isFading && remaining <= needed) {
+        // Prime next video and only crossfade when it has data ready
         try {
           b.currentTime = 0.01;
-          b.play();
         } catch {}
-        // Start crossfade
-        setVidOpacities(activeVid === 0 ? [0, 1] : [1, 0]);
-        window.setTimeout(() => {
-          try { a.pause(); } catch {}
-          setActiveVid(activeVid === 0 ? 1 : 0);
-        }, crossfadeMs);
+        if (b.readyState >= 3 /* HAVE_FUTURE_DATA */) {
+          startCrossfade();
+        } else {
+          const onCanPlay = () => {
+            b.removeEventListener('canplay', onCanPlay);
+            startCrossfade();
+          };
+          b.addEventListener('canplay', onCanPlay, { once: true });
+        }
+      }
+    };
+
+    // Fallback: if the active video ends without timeupdate threshold triggering
+    const onEnded = () => {
+      if (isFading) return;
+      // Ensure the other video is ready, then crossfade immediately
+      try { b.currentTime = 0.01; } catch {}
+      if (b.readyState >= 3) {
+        startCrossfade();
+      } else {
+        const onCanPlay = () => {
+          b.removeEventListener('canplay', onCanPlay);
+          startCrossfade();
+        };
+        b.addEventListener('canplay', onCanPlay, { once: true });
       }
     };
 
     a.addEventListener('timeupdate', onTimeUpdate);
+    scheduleCrossfade();
+    a.addEventListener('ended', onEnded);
     return () => {
       a.removeEventListener('timeupdate', onTimeUpdate);
+      a.removeEventListener('ended', onEnded);
+      if (cfTimerRef.current) { window.clearTimeout(cfTimerRef.current); cfTimerRef.current = null; }
     };
-  }, [activeVid, crossfadeMs]);
+  }, [activeVid, crossfadeMs, scheduleCrossfade]);
 
   // Scroll progress for parallax effects
   const { scrollYProgress } = useScroll({ 
@@ -430,7 +502,18 @@ const Hero = () => {
                           muted
                           playsInline
                           preload="auto"
-                          loop={false}
+                          loop
+                          onLoadedMetadata={(e) => {
+                            v0DurRef.current = e.currentTarget.duration || 0;
+                            if (activeVid === 0) {
+                              try { e.currentTarget.play().catch(() => {}); } catch {}
+                            }
+                          }}
+                          onCanPlay={() => {
+                            if (activeVid === 0) {
+                              try { v0Ref.current?.play().catch(() => {}); } catch {}
+                            }
+                          }}
                           style={{
                             position: 'absolute',
                             inset: 0,
@@ -450,7 +533,18 @@ const Hero = () => {
                           muted
                           playsInline
                           preload="auto"
-                          loop={false}
+                          loop
+                          onLoadedMetadata={(e) => {
+                            v1DurRef.current = e.currentTarget.duration || 0;
+                            if (activeVid === 1) {
+                              try { e.currentTarget.play().catch(() => {}); } catch {}
+                            }
+                          }}
+                          onCanPlay={() => {
+                            if (activeVid === 1) {
+                              try { v1Ref.current?.play().catch(() => {}); } catch {}
+                            }
+                          }}
                           style={{
                             position: 'absolute',
                             inset: 0,
