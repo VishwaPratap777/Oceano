@@ -425,7 +425,7 @@ const Hero = () => {
                         {/* Video A */}
                         <video
                           ref={v0Ref as any}
-                          src="/seav2.mp4"
+                          src="/seav3.mp4"
                           autoPlay
                           muted
                           playsInline
