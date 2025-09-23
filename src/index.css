@@ -217,10 +217,44 @@
     perspective: 1000px;
   }
 
-  /* Optimize animations */
+  /* Global performance optimizations */
   * {
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
+    box-sizing: border-box;
+  }
+
+  /* Optimize video and canvas elements */
+  video, canvas {
+    transform: translate3d(0, 0, 0);
+    backface-visibility: hidden;
+    -webkit-backface-visibility: hidden;
+  }
+
+  /* Optimize motion elements */
+  [data-motion-component] {
+    will-change: transform, opacity;
+    transform: translate3d(0, 0, 0);
+  }
+
+  /* Reduce motion for accessibility */
+  @media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after {
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.01ms !important;
+    }
+  }
+
+  /* Optimize scrolling performance */
+  * {
+    scroll-behavior: smooth;
+  }
+  
+  @supports (scroll-behavior: smooth) {
+    html {
+      scroll-behavior: smooth;
+    }
   }
 
   /* Ripple hover effect (uses --ripple-x/--ripple-y set on mousemove) */

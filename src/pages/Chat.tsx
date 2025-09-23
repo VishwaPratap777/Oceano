@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useMemo, memo } from "react";
 import { ArrowLeft, Send, Plus, Trash2, Clock, MessageSquare, Menu, X } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import TransitionLink from "../components/TransitionLink";
@@ -22,7 +22,7 @@ const Chat = () => {
     }
   ]);
   const [inputValue, setInputValue] = useState("");
-  const [chatHistories] = useState<ChatHistory[]>([
+  const chatHistories = useMemo<ChatHistory[]>(() => [
     {
       id: "1",
       title: "Ocean Currents Discussion",
@@ -31,7 +31,7 @@ const Chat = () => {
       isActive: true
     },
     {
-      id: "2", 
+      id: "2",
       title: "Marine Biology Q&A",
       lastMessage: "What are coral reefs made of?",
       timestamp: "1 hour ago",
@@ -41,7 +41,7 @@ const Chat = () => {
       id: "3",
       title: "Deep Sea Exploration",
       lastMessage: "How deep is the Mariana Trench?",
-      timestamp: "3 hours ago", 
+      timestamp: "3 hours ago",
       isActive: false
     },
     {
@@ -58,7 +58,7 @@ const Chat = () => {
       timestamp: "2 days ago",
       isActive: false
     }
-  ]);
+  ], []);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -95,58 +95,78 @@ const Chat = () => {
     }, 1000);
   };
 
+  // Memoized Message Component
+  const Message = memo(({ message }: { message: typeof messages[0] }) => (
+    <motion.div
+      className={`flex ${message.type === 'user' ? 'justify-end' : 'justify-start'} mb-4`}
+      initial={{ opacity: 0, y: 20, scale: 0.95 }}
+      animate={{ opacity: 1, y: 0, scale: 1 }}
+      transition={{ duration: 0.3, ease: 'easeOut' }}
+      style={{ willChange: 'transform, opacity' }}
+    >
+      <div className={`max-w-xs md:max-w-md rounded-2xl px-4 py-3 ${
+        message.type === 'user' 
+          ? 'bg-cyan-600 text-white rounded-br-none' 
+          : 'bg-slate-800 text-slate-200 rounded-bl-none'
+      }`}>
+        <p className="text-sm">{message.content}</p>
+        <div className={`text-xs mt-1 text-right ${
+          message.type === 'user' ? 'text-cyan-200' : 'text-slate-400'
+        }`}>
+          {message.timestamp}
+        </div>
+      </div>
+    </motion.div>
+  ));
+
   return (
     <motion.div 
-      className="flex h-screen relative bg-transparent"
-      initial={{ 
-        opacity: 0,
-        scale: 0.9,
-        y: 50,
-        filter: "blur(20px)"
-      }}
-      animate={{ 
-        opacity: 1,
-        scale: 1,
-        y: 0,
-        filter: "blur(0px)"
-      }}
-      exit={{ 
-        opacity: 0,
-        scale: 1.1,
-        y: -50,
-        filter: "blur(20px)"
-      }}
+      className="flex h-screen relative bg-transparent overflow-hidden"
+      initial={{ opacity: 0, scale: 0.98 }}
+      animate={{ opacity: 1, scale: 1 }}
+      exit={{ opacity: 0, scale: 1.02 }}
       transition={{ 
-        duration: 1.2,
-        ease: [0.25, 0.46, 0.45, 0.94],
-        type: "spring",
-        stiffness: 100,
-        damping: 20
+        duration: 0.5,
+        ease: [0.25, 0.1, 0.25, 1.0]
       }}
-      style={{ willChange: 'transform, opacity, filter' }}
+      style={{ willChange: 'transform, opacity' }}
     >
       {/* Subtle animated surface glow */}
-      <motion.div
+      <div 
         className="pointer-events-none absolute inset-0 -z-10"
         style={{
-          background: 'radial-gradient(800px 320px at 50% 0%, rgba(56,189,248,0.18), rgba(56,189,248,0.08) 50%, transparent 70%)'
+          background: 'radial-gradient(800px 320px at 50% 0%, rgba(56,189,248,0.18), rgba(56,189,248,0.08) 50%, transparent 70%)',
+          willChange: 'opacity, background-position',
+          opacity: 0.14,
+          animation: 'gradientShift 24s ease-in-out infinite',
         }}
-        initial={{ opacity: 0.12, backgroundPositionX: '0%' }}
-        animate={{ opacity: 0.16, backgroundPositionX: ['0%', '100%', '0%'] }}
-        transition={{ duration: 24, repeat: Infinity, ease: 'easeInOut' }}
         aria-hidden
       />
+      <style>{`
+        @keyframes gradientShift {
+          0%, 100% { background-position: 0% 0%; }
+          50% { background-position: 100% 0%; }
+        }
+        * {
+          -webkit-font-smoothing: antialiased;
+          -moz-osx-font-smoothing: grayscale;
+        }
+      `}</style>
       {/* Removed floating sidebar toggle to improve UX */}
 
       {/* Sidebar */}
-      <AnimatePresence>
+      <AnimatePresence mode="wait">
         {isSidebarOpen && (
           <motion.aside 
-            className="w-80 bg-slate-900/95 backdrop-blur-sm border-r border-slate-700/50 flex flex-col"
-            initial={{ x: -320, opacity: 0 }}
+            className="w-80 bg-slate-900/95 backdrop-blur-sm border-r border-slate-700/50 flex flex-col fixed inset-y-0 left-0 z-20"
+            initial={{ x: '-100%', opacity: 0 }}
             animate={{ x: 0, opacity: 1 }}
-            exit={{ x: -320, opacity: 0 }}
-            transition={{ duration: 0.4, ease: [0.25, 0.46, 0.45, 0.94] }}
+            exit={{ x: '-100%', opacity: 0 }}
+            transition={{ 
+              x: { type: 'spring', stiffness: 300, damping: 30 },
+              opacity: { duration: 0.2 }
+            }}
+            style={{ willChange: 'transform, opacity' }}
           >
         {/* Header */}
         <div className="p-6 border-b border-slate-700/50">

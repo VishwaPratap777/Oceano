@@ -3,7 +3,7 @@ import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route, useLocation } from "react-router-dom";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, useCallback, memo } from "react";
 import Index from "./pages/Index";
 import Chat from "./pages/Chat";
 import NotFound from "./pages/NotFound";
@@ -32,25 +32,26 @@ const AppContent = () => {
   const [showWaves, setShowWaves] = useState<boolean>(initialShow);
   const rafRef = useRef<number | null>(null);
 
+  const onScroll = useCallback(() => {
+    if (rafRef.current) return;
+    rafRef.current = window.requestAnimationFrame(() => {
+      rafRef.current = null;
+      setShowWaves(window.scrollY > window.innerHeight * 0.1);
+    });
+  }, []);
+
   useEffect(() => {
     if (!isHome) {
       setShowWaves(true);
       return;
     }
-    const onScroll = () => {
-      if (rafRef.current) return;
-      rafRef.current = window.requestAnimationFrame(() => {
-        rafRef.current = null;
-        setShowWaves(window.scrollY > window.innerHeight * 0.1);
-      });
-    };
     setShowWaves(window.scrollY > window.innerHeight * 0.1);
     window.addEventListener('scroll', onScroll, { passive: true });
     return () => {
-      window.removeEventListener('scroll', onScroll as any);
+      window.removeEventListener('scroll', onScroll);
       if (rafRef.current) cancelAnimationFrame(rafRef.current);
     };
-  }, [isHome]);
+  }, [isHome, onScroll]);
 
   return (
     <div className="min-h-screen">

@@ -37,6 +37,52 @@ const Hero = () => {
   // Slightly longer crossfade for seamless loop
   const crossfadeMs = 1200;
 
+  // Pause background and masked videos when hero is offscreen
+  useEffect(() => {
+    const section = sectionRef.current;
+    if (!section) return;
+    let pausedByObserver = false;
+    const pauseAll = () => {
+      try { videoRef.current?.pause(); } catch {}
+      try { v0Ref.current?.pause(); } catch {}
+      try { v1Ref.current?.pause(); } catch {}
+    };
+    const playAll = () => {
+      try { videoRef.current?.play().catch(() => {}); } catch {}
+      try { v0Ref.current?.play().catch(() => {}); } catch {}
+      try { v1Ref.current?.play().catch(() => {}); } catch {}
+    };
+    const io = new IntersectionObserver((entries) => {
+      const e = entries[0];
+      if (!e) return;
+      if (e.isIntersecting && e.intersectionRatio > 0.1) {
+        if (pausedByObserver) {
+          playAll();
+          pausedByObserver = false;
+        }
+      } else {
+        pauseAll();
+        pausedByObserver = true;
+      }
+    }, { threshold: [0, 0.1, 0.5, 1] });
+    io.observe(section);
+    // Also pause on hidden tab
+    const onVis = () => {
+      if (document.visibilityState === 'hidden') {
+        pauseAll();
+        pausedByObserver = true;
+      } else if (pausedByObserver) {
+        playAll();
+        pausedByObserver = false;
+      }
+    };
+    document.addEventListener('visibilitychange', onVis);
+    return () => {
+      io.disconnect();
+      document.removeEventListener('visibilitychange', onVis);
+    };
+  }, []);
+
   // Ensure both masked videos are playing (muted + inline allows autoplay). This avoids stalls after one iteration.
   useEffect(() => {
     const v0 = v0Ref.current;
@@ -321,7 +367,7 @@ const Hero = () => {
         muted
         loop
         playsInline
-        preload="auto"
+        preload="metadata"
         onLoadedData={handleVideoLoad}
         onCanPlayThrough={handleCanPlayThrough}
         style={{ 
@@ -329,25 +375,14 @@ const Hero = () => {
           objectFit: 'cover',
           height: '100vh',
           width: '100vw',
-          minHeight: '100vh',
-          minWidth: '100vw',
-          maxHeight: '100vh',
-          maxWidth: '100vw',
           display: 'block',
-          top: 0,
-          left: 0,
-          right: 0,
-          bottom: 0,
-          margin: 0,
-          padding: 0,
-          border: 'none',
-          outline: 'none',
           zIndex: 0,
           opacity: 1,
-          transition: 'opacity 500ms ease',
-          willChange: 'opacity, transform',
-          transform: 'translateZ(0)',
-          backfaceVisibility: 'hidden'
+          transition: 'opacity 300ms ease',
+          willChange: 'opacity',
+          transform: 'translate3d(0,0,0)',
+          backfaceVisibility: 'hidden',
+          WebkitBackfaceVisibility: 'hidden'
         }}
       >
         <source src="/seav.mp4" type="video/mp4" />
@@ -401,7 +436,8 @@ const Hero = () => {
               animate={{ opacity: 1, x: 0 }}
               transition={{ duration: 0.6, delay: 0.2 }}
             >
-              <TransitionLink to="/login" variant="stagger">
+              {/* Use default variant (ripple) to avoid invalid value while keeping same UI */}
+              <TransitionLink to="/login">
                 <Button 
                   variant="ocean" 
                   size="sm"
@@ -501,7 +537,7 @@ const Hero = () => {
                           autoPlay
                           muted
                           playsInline
-                          preload="auto"
+                          preload="metadata"
                           loop
                           onLoadedMetadata={(e) => {
                             v0DurRef.current = e.currentTarget.duration || 0;
@@ -523,6 +559,9 @@ const Hero = () => {
                             display: 'block',
                             opacity: vidOpacities[0],
                             transition: `opacity ${crossfadeMs}ms ease`,
+                            willChange: 'opacity',
+                            transform: 'translate3d(0,0,0)',
+                            backfaceVisibility: 'hidden'
                           }}
                         />
                         {/* Video B */}
@@ -532,7 +571,7 @@ const Hero = () => {
                           autoPlay
                           muted
                           playsInline
-                          preload="auto"
+                          preload="metadata"
                           loop
                           onLoadedMetadata={(e) => {
                             v1DurRef.current = e.currentTarget.duration || 0;
@@ -554,6 +593,9 @@ const Hero = () => {
                             display: 'block',
                             opacity: vidOpacities[1],
                             transition: `opacity ${crossfadeMs}ms ease`,
+                            willChange: 'opacity',
+                            transform: 'translate3d(0,0,0)',
+                            backfaceVisibility: 'hidden'
                           }}
                         />
                       </div>
@@ -573,7 +615,8 @@ const Hero = () => {
             transition={{ type: 'spring', stiffness: 185, damping: 20, mass: 1.0, delay: 0.12 }}
             className="flex flex-col sm:flex-row gap-3 justify-center items-center mb-4 md:mb-6"
           >
-            <TransitionLink to="/chat" variant="none">
+            {/* Disable overlay to match previous 'none' behavior without using an invalid variant */}
+            <TransitionLink to="/chat" noOverlay>
               <Button 
                 variant="ocean" 
                 size="lg"
@@ -584,7 +627,7 @@ const Hero = () => {
               </Button>
             </TransitionLink>
             
-            <TransitionLink to="/learn" variant="none">
+            <TransitionLink to="/learn" noOverlay>
               <Button 
                 variant="outline" 
                 size="lg"

@@ -1,4 +1,4 @@
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, memo } from "react";
 
 // Minimal watery ripple mouse trail using a lightweight canvas overlay.
 // - Pointer-events: none; does not block UI
@@ -31,7 +31,7 @@ const MouseRippleTrail = () => {
     ctxRef.current = ctx;
 
     const setSize = () => {
-      const dpr = Math.min(window.devicePixelRatio || 1, 1.75);
+      const dpr = Math.min(window.devicePixelRatio || 1, 1.5);
       const w = window.innerWidth;
       const h = window.innerHeight;
       canvas.width = Math.floor(w * dpr);
@@ -39,19 +39,20 @@ const MouseRippleTrail = () => {
       canvas.style.width = w + 'px';
       canvas.style.height = h + 'px';
       ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+      ctx.imageSmoothingEnabled = false;
     };
     setSize();
 
     const addPoint = (x: number, y: number) => {
       const now = performance.now();
-      pointsRef.current.push({ x, y, t: now, life: 900 }); // life in ms
+      pointsRef.current.push({ x, y, t: now, life: 800 }); // life in ms
       // Cap number of points to keep perf
-      if (pointsRef.current.length > 80) pointsRef.current.shift();
+      if (pointsRef.current.length > 60) pointsRef.current.shift();
     };
 
     const onMove = (e: MouseEvent) => {
       const now = performance.now();
-      if (now - lastMoveRef.current < 16) return; // throttle ~60fps
+      if (now - lastMoveRef.current < 32) return; // throttle to ~30fps for better performance
       lastMoveRef.current = now;
       addPoint(e.clientX, e.clientY);
     };
@@ -117,4 +118,4 @@ const MouseRippleTrail = () => {
   return null;
 };
 
-export default MouseRippleTrail;
+export default memo(MouseRippleTrail);

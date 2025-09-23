@@ -1,4 +1,4 @@
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, memo } from "react";
 import { gsap } from "gsap";
 
 const OceanBackground = ({ dim = false, showGradient = true, zIndex = 0 }: { dim?: boolean; showGradient?: boolean; zIndex?: number }) => {
@@ -31,7 +31,9 @@ const OceanBackground = ({ dim = false, showGradient = true, zIndex = 0 }: { dim
         xPercent: -50,
         ease: "none",
         duration,
-        repeat: -1
+        repeat: -1,
+        force3D: true,
+        transformOrigin: "0 0"
       });
       animations.push(tween);
 
@@ -42,7 +44,8 @@ const OceanBackground = ({ dim = false, showGradient = true, zIndex = 0 }: { dim
           duration: 3 + idx,
           yoyo: true,
           repeat: -1,
-          ease: 'sine.inOut'
+          ease: 'sine.inOut',
+          force3D: true
         })
       );
     });
@@ -58,13 +61,13 @@ const OceanBackground = ({ dim = false, showGradient = true, zIndex = 0 }: { dim
         const travel = h + 300;
         const dur = 6 + Math.random() * 6;
         const del = Math.random() * 4;
-        gsap.set(el, { y: startY, opacity: 0 });
+        gsap.set(el, { y: startY, opacity: 0, force3D: true });
         tweens.push(
-          gsap.to(el, { y: -travel, opacity: 1, duration: dur, delay: del, repeat: -1, ease: 'none' })
+          gsap.to(el, { y: -travel, opacity: 1, duration: dur, delay: del, repeat: -1, ease: 'none', force3D: true })
         );
         // gentle sideways drift
         tweens.push(
-          gsap.to(el, { x: `+=${(Math.random() - 0.5) * 30}`, duration: 3 + Math.random()*2, repeat: -1, yoyo: true, ease: 'sine.inOut' })
+          gsap.to(el, { x: `+=${(Math.random() - 0.5) * 30}`, duration: 3 + Math.random()*2, repeat: -1, yoyo: true, ease: 'sine.inOut', force3D: true })
         );
       });
       return tweens;
@@ -119,7 +122,7 @@ const OceanBackground = ({ dim = false, showGradient = true, zIndex = 0 }: { dim
     refProp: React.RefObject<HTMLDivElement>;
   }) => (
     <div className="absolute left-0 right-0 overflow-hidden" style={{ bottom: 0, height }}>
-      <div ref={refProp} className="flex" style={{ width: '200%', willChange: 'transform' }}>
+      <div ref={refProp} className="flex" style={{ width: '200%', willChange: 'transform', transform: 'translate3d(0,0,0)' }}>
         {/* Tile A - smooth, rounded wave */}
         <svg className="w-1/2 h-full" viewBox="0 0 1440 320" preserveAspectRatio="none" aria-hidden>
           <path
@@ -191,4 +194,4 @@ const OceanBackground = ({ dim = false, showGradient = true, zIndex = 0 }: { dim
   );
 };
 
-export default OceanBackground;
+export default memo(OceanBackground);
