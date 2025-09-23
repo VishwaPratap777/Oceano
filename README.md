@@ -1,73 +1,94 @@
-# Welcome to your Lovable project
+🌊 OceanData – Democratizing Oceanographic Data
 
-## Project info
+Access, query, and visualize the ocean like never before. OceanData is a modern web application that unlocks the power of marine data for research, conservation, and discovery.
 
-**URL**: https://lovable.dev/projects/2e25b11d-e1d8-4062-90bc-ac1f2390d0e4
+🚀 Features
 
-## How can I edit this code?
+🌊 Animated Ocean Experience – Subtle wave animations & immersive design.
 
-There are several ways of editing your application.
+📊 Data Visualization – Interactive charts and visual layers built with Three.js and Framer Motion.
 
-**Use Lovable**
+🔎 Smooth Scrolling & Navigation – Powered by Lenis for a buttery-smooth scroll.
 
-Simply visit the [Lovable Project](https://lovable.dev/projects/2e25b11d-e1d8-4062-90bc-ac1f2390d0e4) and start prompting.
+🎨 Modern UI Components – Built with shadcn/ui & Tailwind CSS.
 
-Changes made via Lovable will be committed automatically to this repo.
+⚡ Fast Development Stack – Using Vite + TypeScript + React for performance and scalability.
 
-**Use your preferred IDE**
+🎥 Animations – GSAP + Framer for smooth transitions and fluid motion.
 
-If you want to work locally using your own IDE, you can clone this repo and push changes. Pushed changes will also be reflected in Lovable.
+🛠️ Tech Stack
 
-The only requirement is having Node.js & npm installed - [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating)
+Frontend Framework: React
+ + TypeScript
 
-Follow these steps:
+Bundler: Vite
 
-```sh
-# Step 1: Clone the repository using the project's Git URL.
+Styling: Tailwind CSS
+ + shadcn/ui
+
+Animations: GSAP
+, Framer Motion
+, Lenis
+
+3D / Visualization: Three.js
+
+📂 Project Setup
+
+Clone the repository and install dependencies:
+
+# Step 1: Clone the repository
 git clone <YOUR_GIT_URL>
 
-# Step 2: Navigate to the project directory.
-cd <YOUR_PROJECT_NAME>
+# Step 2: Navigate to the project folder
+cd ocean-data
 
-# Step 3: Install the necessary dependencies.
-npm i
+# Step 3: Install dependencies
+npm install
 
-# Step 4: Start the development server with auto-reloading and an instant preview.
+# Step 4: Start the development server
 npm run dev
-```
 
-**Edit a file directly in GitHub**
+🌐 Deployment
 
-- Navigate to the desired file(s).
-- Click the "Edit" button (pencil icon) at the top right of the file view.
-- Make your changes and commit the changes.
+You can deploy OceanData easily using:
 
-**Use GitHub Codespaces**
+Vercel
 
-- Navigate to the main page of your repository.
-- Click on the "Code" button (green button) near the top right.
-- Select the "Codespaces" tab.
-- Click on "New codespace" to launch a new Codespace environment.
-- Edit files directly within the Codespace and commit and push your changes once you're done.
+Netlify
 
-## What technologies are used for this project?
+GitHub Pages
 
-This project is built with:
+Or directly via Lovable (supports custom domains).
 
-- Vite
-- TypeScript
-- React
-- shadcn-ui
-- Tailwind CSS
+🖼️ Preview
 
-## How can I deploy this project?
+The landing page features:
 
-Simply open [Lovable](https://lovable.dev/projects/2e25b11d-e1d8-4062-90bc-ac1f2390d0e4) and click on Share -> Publish.
+A hero section with animated ocean waves background.
 
-## Can I connect a custom domain to my Lovable project?
+Dynamic text effects that feel like “water flow”.
 
-Yes, you can!
+CTA buttons (Wave Us, Learn More).
 
-To connect a domain, navigate to Project > Settings > Domains and click Connect Domain.
+🤝 Contributing
 
-Read more here: [Setting up a custom domain](https://docs.lovable.dev/features/custom-domain#custom-domain)
+Contributions, ideas, and pull requests are welcome!
+If you’d like to collaborate:
+
+Fork the repository
+
+Create a feature branch (git checkout -b feature/my-feature)
+
+Commit your changes (git commit -m "Add my feature")
+
+Push to the branch (git push origin feature/my-feature)
+
+Open a Pull Request
+
+📜 License
+
+This project is licensed under the MIT License – free to use, modify, and distribute.
+
+🌊 Inspiration
+
+This project is built with the vision of democratizing access to ocean data, making marine research more accessible and visually engaging for students, researchers, and conservationists.
