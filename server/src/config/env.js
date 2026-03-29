@@ -9,7 +9,7 @@ dotenv.config({ path: path.resolve(__dirname, "../../.env") });
 const config = {
   port: parseInt(process.env.PORT || "3001", 10),
   stormglassApiKey: process.env.STORMGLASS_API_KEY || "",
-  openaiApiKey: process.env.OPENAI_API_KEY || "",
+  groqApiKey: process.env.GROQ_API_KEY || "",
 
   // Bay of Bengal (Chennai) defaults
   defaultLat: 13.0827,
@@ -20,8 +20,8 @@ const config = {
 if (!config.stormglassApiKey) {
   console.warn("⚠️  STORMGLASS_API_KEY not set — ocean endpoint will return mock data");
 }
-if (!config.openaiApiKey) {
-  console.warn("⚠️  OPENAI_API_KEY not set — chatbot will use fallback responses");
+if (!config.groqApiKey) {
+  console.warn("⚠️  GROQ_API_KEY not set — chatbot will use fallback responses");
 }
 
 export default config;

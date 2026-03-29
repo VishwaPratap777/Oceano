@@ -18,7 +18,7 @@ app.get("/api/health", (_req, res) => {
     timestamp: new Date().toISOString(),
     services: {
       stormglass: config.stormglassApiKey ? "configured" : "missing key",
-      openai: config.openaiApiKey ? "configured" : "fallback mode",
+      groq: config.groqApiKey ? "configured" : "fallback mode",
     },
   });
 });
@@ -40,6 +40,6 @@ app.listen(config.port, () => {
   Chat:    http://localhost:${config.port}/api/chat (POST)
   ─────────────────────────────────────────────
   StormGlass: ${config.stormglassApiKey ? "✅ Key configured" : "⚠️  No key — mock data"}
-  OpenAI:     ${config.openaiApiKey ? "✅ Key configured" : "⚠️  No key — fallback mode"}
+  Groq:       ${config.groqApiKey ? "✅ Key configured" : "⚠️  No key — fallback mode"}
   `);
 });

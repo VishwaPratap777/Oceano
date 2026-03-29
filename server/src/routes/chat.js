@@ -1,5 +1,5 @@
 import { Router } from "express";
-import { chat } from "../services/openai.js";
+import { chat } from "../services/groq.js";
 
 const router = Router();
 
@@ -26,16 +26,16 @@ router.post("/", async (req, res, next) => {
       timestamp: new Date().toISOString(),
     });
   } catch (err) {
-    // Handle OpenAI-specific errors
-    if (err?.status === 401) {
+    // Handle Groq-specific errors if necessary
+    if (err?.status === 401 || err?.message?.includes("API key")) {
       return res.status(401).json({
-        error: "Invalid OpenAI API key",
+        error: "Invalid Groq API key",
         status: 401,
       });
     }
-    if (err?.status === 429) {
+    if (err?.status === 429 || err?.message?.includes("quota")) {
       return res.status(429).json({
-        error: "OpenAI rate limit exceeded. Please try again in a moment.",
+        error: "Groq rate limit exceeded. Please try again in a moment.",
         status: 429,
       });
     }

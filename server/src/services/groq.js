@@ -1,4 +1,4 @@
-import OpenAI from "openai";
+import Groq from "groq-sdk";
 import config from "../config/env.js";
 
 // ── System prompt for ocean-domain expertise ────────────────────────────
@@ -20,7 +20,7 @@ Guidelines:
 - Be enthusiastic about ocean science — it's fascinating!
 - Use ocean-related emoji occasionally for personality 🌊🐋🌡️`;
 
-// ── Intelligent fallback responses (when no OpenAI key) ─────────────────
+// ── Intelligent fallback responses (when no API key or rate limited) ───
 const FALLBACK_RESPONSES = [
   {
     keywords: ["temperature", "warm", "hot", "cold", "sst", "thermal"],
@@ -85,7 +85,7 @@ function getFallbackResponse(message) {
 // ── Main chat function ──────────────────────────────────────────────────
 export async function chat(message, history = []) {
   // Fallback if no API key
-  if (!config.openaiApiKey) {
+  if (!config.groqApiKey) {
     // Simulate slight delay for natural feel
     await new Promise((r) => setTimeout(r, 400 + Math.random() * 600));
     return {
@@ -94,13 +94,12 @@ export async function chat(message, history = []) {
     };
   }
 
-  // Try real OpenAI call — gracefully fall back on errors
+  // Try real Groq call — gracefully fall back on errors
   try {
-    const openai = new OpenAI({ apiKey: config.openaiApiKey });
+    const groq = new Groq({ apiKey: config.groqApiKey });
 
     const messages = [
       { role: "system", content: SYSTEM_PROMPT },
-      // Include conversation history for context
       ...history.slice(-10).map((h) => ({
         role: h.role,
         content: h.content,
@@ -108,8 +107,8 @@ export async function chat(message, history = []) {
       { role: "user", content: message },
     ];
 
-    const completion = await openai.chat.completions.create({
-      model: "gpt-4o-mini",
+    const completion = await groq.chat.completions.create({
+      model: "llama-3.1-8b-instant",
       messages,
       max_tokens: 500,
       temperature: 0.7,
@@ -117,17 +116,17 @@ export async function chat(message, history = []) {
 
     return {
       reply: completion.choices[0]?.message?.content || "I couldn't generate a response. Please try again.",
-      model: "gpt-4o-mini",
+      model: "llama-3.1-8b-instant",
     };
   } catch (err) {
     // On rate limit, quota, or network errors — use smart fallback instead of failing
     const status = err?.status || err?.response?.status;
-    if (status === 429 || status === 402 || status === 503) {
-      console.warn(`⚠️  OpenAI API error (${status}), using fallback response`);
+    if (status === 429 || status === 402 || status === 503 || err?.message?.includes('quota')) {
+      console.warn(`⚠️  Groq API error (${status || 'Quota'}), using fallback response`);
       await new Promise((r) => setTimeout(r, 300 + Math.random() * 400));
       return {
         reply: getFallbackResponse(message),
-        model: "fallback (OpenAI quota exceeded)",
+        model: "fallback (Groq quota exceeded)",
       };
     }
     // Re-throw other errors (auth, etc.) so the route handler catches them
