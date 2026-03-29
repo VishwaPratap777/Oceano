@@ -1,7 +1,15 @@
-import { useState, useMemo, memo } from "react";
-import { ArrowLeft, Send, Plus, Trash2, Clock, MessageSquare, Menu, X } from "lucide-react";
+import { useState, useRef, useEffect, useMemo, memo } from "react";
+import { ArrowLeft, Send, Plus, Trash2, Clock, MessageSquare, Menu, X, Loader2 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import TransitionLink from "../components/TransitionLink";
+import { sendChatMessage } from "../services/chatApi";
+
+interface ChatMessage {
+  id: number;
+  type: "user" | "assistant";
+  content: string;
+  timestamp: string;
+}
 
 interface ChatHistory {
   id: string;
@@ -13,15 +21,19 @@ interface ChatHistory {
 
 const Chat = () => {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
-  const [messages, setMessages] = useState([
+  const [messages, setMessages] = useState<ChatMessage[]>([
     {
       id: 1,
       type: "assistant",
-      content: "Welcome to Ocean AI! 🌊 I'm here to help you explore the depths of marine knowledge. What would you like to know about the ocean?",
+      content: "Welcome to Ocean AI! 🌊 I'm here to help you explore the depths of marine knowledge. Ask me about ocean temperatures, waves, currents, marine life, or anything ocean-related!",
       timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
     }
   ]);
   const [inputValue, setInputValue] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const messagesEndRef = useRef<HTMLDivElement | null>(null);
+
   const chatHistories = useMemo<ChatHistory[]>(() => [
     {
       id: "1",
@@ -60,64 +72,62 @@ const Chat = () => {
     }
   ], []);
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!inputValue.trim()) return;
+  // Auto-scroll to bottom when new messages arrive
+  useEffect(() => {
+    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+  }, [messages, isLoading]);
 
-    const newMessage = {
-      id: messages.length + 1,
-      type: "user" as const,
-      content: inputValue,
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!inputValue.trim() || isLoading) return;
+
+    const userMessage: ChatMessage = {
+      id: Date.now(),
+      type: "user",
+      content: inputValue.trim(),
       timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
     };
 
-    setMessages(prev => [...prev, newMessage]);
+    setMessages(prev => [...prev, userMessage]);
     setInputValue("");
+    setIsLoading(true);
+    setError(null);
 
-    // Simulate AI response
-    setTimeout(() => {
-      const responses = [
-        "The ocean covers about 71% of Earth's surface and contains 97% of the planet's water! 🌊",
-        "Coral reefs are often called the 'rainforests of the sea' due to their incredible biodiversity.",
-        "The Mariana Trench is the deepest part of the ocean, reaching depths of over 36,000 feet!",
-        "Ocean currents play a crucial role in regulating Earth's climate by distributing heat around the globe.",
-        "Did you know that we've explored less than 5% of the world's oceans? There's still so much to discover!"
-      ];
-      
-      const aiResponse = {
-        id: messages.length + 2,
-        type: "assistant" as const,
-        content: responses[Math.floor(Math.random() * responses.length)],
+    try {
+      // Build history for context (exclude the welcome message)
+      const history = messages
+        .filter(m => m.id !== 1)
+        .map(m => ({
+          role: m.type === "user" ? "user" as const : "assistant" as const,
+          content: m.content
+        }));
+
+      const response = await sendChatMessage(userMessage.content, history);
+
+      const aiMessage: ChatMessage = {
+        id: Date.now() + 1,
+        type: "assistant",
+        content: response.reply,
         timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
       };
 
-      setMessages(prev => [...prev, aiResponse]);
-    }, 1000);
-  };
+      setMessages(prev => [...prev, aiMessage]);
+    } catch (err) {
+      const errorMsg = err instanceof Error ? err.message : "Failed to get response";
+      setError(errorMsg);
 
-  // Memoized Message Component
-  const Message = memo(({ message }: { message: typeof messages[0] }) => (
-    <motion.div
-      className={`flex ${message.type === 'user' ? 'justify-end' : 'justify-start'} mb-4`}
-      initial={{ opacity: 0, y: 20, scale: 0.95 }}
-      animate={{ opacity: 1, y: 0, scale: 1 }}
-      transition={{ duration: 0.3, ease: 'easeOut' }}
-      style={{ willChange: 'transform, opacity' }}
-    >
-      <div className={`max-w-xs md:max-w-md rounded-2xl px-4 py-3 ${
-        message.type === 'user' 
-          ? 'bg-cyan-600 text-white rounded-br-none' 
-          : 'bg-slate-800 text-slate-200 rounded-bl-none'
-      }`}>
-        <p className="text-sm">{message.content}</p>
-        <div className={`text-xs mt-1 text-right ${
-          message.type === 'user' ? 'text-cyan-200' : 'text-slate-400'
-        }`}>
-          {message.timestamp}
-        </div>
-      </div>
-    </motion.div>
-  ));
+      // Add error message to chat
+      const errorMessage: ChatMessage = {
+        id: Date.now() + 1,
+        type: "assistant",
+        content: `⚠️ Sorry, I encountered an error: ${errorMsg}. Please try again.`,
+        timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+      };
+      setMessages(prev => [...prev, errorMessage]);
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   return (
     <motion.div 
@@ -147,12 +157,15 @@ const Chat = () => {
           0%, 100% { background-position: 0% 0%; }
           50% { background-position: 100% 0%; }
         }
+        @keyframes typingPulse {
+          0%, 100% { opacity: 0.4; }
+          50% { opacity: 1; }
+        }
         * {
           -webkit-font-smoothing: antialiased;
           -moz-osx-font-smoothing: grayscale;
         }
       `}</style>
-      {/* Removed floating sidebar toggle to improve UX */}
 
       {/* Sidebar */}
       <AnimatePresence mode="wait">
@@ -264,11 +277,12 @@ const Chat = () => {
               </div>
               <div>
                 <h1 className="text-lg font-semibold text-slate-200">Ocean AI</h1>
-                <p className="text-xs text-slate-400">Always available</p>
+                <p className="text-xs text-slate-400">
+                  {isLoading ? "Thinking..." : "Always available"}
+                </p>
               </div>
             </div>
           </div>
-          {/* Removed colorful dots */}
         </div>
 
         {/* Messages Area */}
@@ -279,7 +293,7 @@ const Chat = () => {
               className={`flex ${message.type === 'user' ? 'justify-end' : 'justify-start'}`}
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.5, delay: index * 0.1 }}
+              transition={{ duration: 0.5, delay: index === messages.length - 1 ? 0.1 : 0 }}
             >
               <div
                 className={`max-w-[80%] rounded-2xl px-4 py-3 backdrop-blur-sm ${
@@ -295,7 +309,7 @@ const Chat = () => {
                     </div>
                   )}
                   <div className="flex-1">
-                    <p className="text-sm leading-relaxed">{message.content}</p>
+                    <p className="text-sm leading-relaxed whitespace-pre-wrap">{message.content}</p>
                     <p className="text-xs opacity-70 mt-2">
                       {message.timestamp}
                     </p>
@@ -309,7 +323,49 @@ const Chat = () => {
               </div>
             </motion.div>
           ))}
+
+          {/* Typing indicator */}
+          {isLoading && (
+            <motion.div
+              className="flex justify-start"
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.3 }}
+            >
+              <div className="bg-slate-800/50 text-slate-200 border border-slate-600/30 rounded-2xl px-4 py-3 backdrop-blur-sm shadow-md shadow-slate-900/10">
+                <div className="flex items-center gap-3">
+                  <div className="w-8 h-8 rounded-full bg-gradient-to-br from-cyan-400 to-blue-500 flex items-center justify-center text-slate-900 font-bold text-sm flex-shrink-0">
+                    🌊
+                  </div>
+                  <div className="flex items-center gap-1.5">
+                    <div className="w-2 h-2 rounded-full bg-cyan-400" style={{ animation: 'typingPulse 1.4s ease-in-out infinite' }} />
+                    <div className="w-2 h-2 rounded-full bg-cyan-400" style={{ animation: 'typingPulse 1.4s ease-in-out 0.2s infinite' }} />
+                    <div className="w-2 h-2 rounded-full bg-cyan-400" style={{ animation: 'typingPulse 1.4s ease-in-out 0.4s infinite' }} />
+                  </div>
+                </div>
+              </div>
+            </motion.div>
+          )}
+
+          <div ref={messagesEndRef} />
         </div>
+
+        {/* Error banner */}
+        <AnimatePresence>
+          {error && (
+            <motion.div
+              initial={{ opacity: 0, height: 0 }}
+              animate={{ opacity: 1, height: "auto" }}
+              exit={{ opacity: 0, height: 0 }}
+              className="px-6 py-2 bg-red-500/10 border-t border-red-500/20 text-red-300 text-sm flex items-center justify-between"
+            >
+              <span>⚠️ {error}</span>
+              <button onClick={() => setError(null)} className="text-red-400 hover:text-red-300 text-xs ml-4">
+                Dismiss
+              </button>
+            </motion.div>
+          )}
+        </AnimatePresence>
 
         {/* Input Area */}
         <div className="border-t border-slate-700/50 p-6 bg-gradient-to-t from-slate-900/50 to-transparent backdrop-blur-sm">
@@ -319,16 +375,22 @@ const Chat = () => {
               value={inputValue}
               onChange={(e) => setInputValue(e.target.value)}
               placeholder="Ask me about the ocean... 🌊"
-              className="flex-1 bg-slate-800/50 border border-slate-700/50 rounded-xl px-4 py-3 text-slate-200 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-cyan-500/40 focus:border-cyan-500/40 transition-all backdrop-blur-sm"
+              disabled={isLoading}
+              className="flex-1 bg-slate-800/50 border border-slate-700/50 rounded-xl px-4 py-3 text-slate-200 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-cyan-500/40 focus:border-cyan-500/40 transition-all backdrop-blur-sm disabled:opacity-50"
             />
             <motion.button
               type="submit"
-              className="ripple px-6 py-3 bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-500 hover:to-blue-500 text-white font-medium rounded-xl transition-all duration-200 shadow-lg hover:shadow-cyan-500/25 flex items-center gap-2"
-              whileHover={{ scale: 1.05 }}
-              whileTap={{ scale: 0.95 }}
+              disabled={isLoading || !inputValue.trim()}
+              className="ripple px-6 py-3 bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-500 hover:to-blue-500 text-white font-medium rounded-xl transition-all duration-200 shadow-lg hover:shadow-cyan-500/25 flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+              whileHover={{ scale: isLoading ? 1 : 1.05 }}
+              whileTap={{ scale: isLoading ? 1 : 0.95 }}
             >
-              <Send className="w-4 h-4" />
-              Send
+              {isLoading ? (
+                <Loader2 className="w-4 h-4 animate-spin" />
+              ) : (
+                <Send className="w-4 h-4" />
+              )}
+              {isLoading ? "..." : "Send"}
             </motion.button>
           </form>
         </div>

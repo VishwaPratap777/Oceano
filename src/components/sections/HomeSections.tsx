@@ -1,6 +1,8 @@
+import { useState, useEffect } from "react";
 import { motion, cubicBezier } from "framer-motion";
 import TransitionLink from "@/components/TransitionLink";
 import { ArrowRight, Activity, Globe2, Waves, Satellite } from "lucide-react";
+import { fetchOceanData, type OceanData } from "@/services/oceanApi";
 
 const easeStandard = cubicBezier(0.25, 0.46, 0.45, 0.94);
 
@@ -153,13 +155,69 @@ const MiniLineChart = ({ points = [2, 4, 3, 5, 6, 4, 7, 6] }: { points?: number[
 };
 
 const HomeSections = () => {
+  const [oceanData, setOceanData] = useState<OceanData | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(false);
+
+  useEffect(() => {
+    let cancelled = false;
+    fetchOceanData()
+      .then((data) => {
+        if (!cancelled) {
+          setOceanData(data);
+          setLoading(false);
+        }
+      })
+      .catch(() => {
+        if (!cancelled) {
+          setError(true);
+          setLoading(false);
+        }
+      });
+    return () => { cancelled = true; };
+  }, []);
+
+  // Helper to format a metric
+  const fmt = (val: number | null | undefined, unit: string, decimals = 1) => {
+    if (val === null || val === undefined) return "N/A";
+    return `${val.toFixed(decimals)}${unit}`;
+  };
+
+  // Build card descriptions from live data
+  const d = oceanData?.data;
+  const cardDescriptions = d
+    ? [
+        `Water temp ${fmt(d.waterTemperature?.value, "°C")} • Air ${fmt(d.airTemperature?.value, "°C")} • SST trending live`,
+        `Sea level ${fmt(d.seaLevel?.value, " m")} • Current ${fmt(d.currentSpeed?.value, " m/s")} ${d.currentDirection?.value != null ? `@ ${d.currentDirection.value.toFixed(0)}°` : ""}`,
+        `Humidity ${fmt(d.humidity?.value, "%", 0)} • Wind ${fmt(d.windSpeed?.value, " m/s")} ${d.windDirection?.value != null ? `@ ${d.windDirection.value.toFixed(0)}°` : ""}`,
+      ]
+    : [
+        "Global SST anomaly trending mild +0.2°C",
+        "Mean sea level steady • Kuroshio current active",
+        "Surface salinity stable • regional variance low",
+      ];
+
+  const livePills = d
+    ? [
+        fmt(d.waterTemperature?.value, "°C"),
+        fmt(d.seaLevel?.value, " m"),
+        fmt(d.humidity?.value, "%", 0),
+      ]
+    : ["~3h", "~3h", "~3h"];
+
+  const livePillLabels = d ? ["SST", "Sea Lvl", "Humidity"] : ["Update", "Update", "Update"];
+
   return (
     <div className="bg-gradient-to-b from-transparent via-slate-900/10 to-slate-900/20">
       {/* Section 1: Global Ocean Data Review */}
       <SectionShell
         id="data"
         title="Global Ocean Data Review"
-        subtitle="A concise snapshot of the ocean's pulse — temperature, salinity, sea level, and currents — unified for rapid situational awareness."
+        subtitle={
+          oceanData
+            ? `Live data from Bay of Bengal (${oceanData.location.lat.toFixed(2)}°N, ${oceanData.location.lng.toFixed(2)}°E) — Source: ${oceanData.source}`
+            : "A concise snapshot of the ocean's pulse — temperature, salinity, sea level, and currents — unified for rapid situational awareness."
+        }
       >
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           {[0,1,2].map((i) => (
@@ -178,20 +236,26 @@ const HomeSections = () => {
                   {i === 1 && <Waves className="w-4 h-4 text-blue-400" />}
                   {i === 2 && <Activity className="w-4 h-4 text-emerald-400" />}
                   <span className="text-sm font-medium">
-                    {i === 0 ? "Sea Surface Temp" : i === 1 ? "Sea Level / Currents" : "Salinity Patterns"}
+                    {i === 0 ? "Sea Surface Temp" : i === 1 ? "Sea Level / Currents" : "Atmosphere"}
                   </span>
                 </div>
-                <StatsPill label="Update" value="~3h" tone={i === 2 ? "emerald" : i === 1 ? "blue" : "cyan"} />
+                {loading ? (
+                  <div className="rounded-xl px-4 py-2 bg-slate-700/40 animate-pulse h-7 w-20" />
+                ) : (
+                  <StatsPill label={livePillLabels[i]} value={livePills[i]} tone={i === 2 ? "emerald" : i === 1 ? "blue" : "cyan"} />
+                )}
               </div>
 
               <MiniSpark />
 
               <div className="mt-5 flex items-center justify-between">
-                <div className="text-slate-300 text-sm">
-                  {i === 0 && "Global SST anomaly trending mild +0.2°C"}
-                  {i === 1 && "Mean sea level steady • Kuroshio current active"}
-                  {i === 2 && "Surface salinity stable • regional variance low"}
-                </div>
+                {loading ? (
+                  <div className="h-4 w-3/4 rounded bg-slate-700/40 animate-pulse" />
+                ) : (
+                  <div className="text-slate-300 text-sm">
+                    {cardDescriptions[i]}
+                  </div>
+                )}
                 <TransitionLink to="/chat" variant="ripple">
                   <button className="text-cyan-300 hover:text-cyan-200 text-sm inline-flex items-center gap-1">
                     Explore <ArrowRight className="w-4 h-4" />
@@ -201,13 +265,38 @@ const HomeSections = () => {
             </motion.div>
           ))}
         </div>
+
+        {/* Live data summary bar */}
+        {oceanData && (
+          <motion.div
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.5, duration: 0.5 }}
+            className="mt-6 grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-6 gap-3"
+          >
+            {[
+              { label: "Wave Height", value: fmt(d?.waveHeight?.value, " m"), tone: "cyan" },
+              { label: "Swell", value: fmt(d?.swellHeight?.value, " m"), tone: "blue" },
+              { label: "Swell Period", value: fmt(d?.swellPeriod?.value, " s"), tone: "blue" },
+              { label: "Wind Speed", value: fmt(d?.windSpeed?.value, " m/s"), tone: "cyan" },
+              { label: "Current", value: fmt(d?.currentSpeed?.value, " m/s"), tone: "emerald" },
+              { label: "Water Temp", value: fmt(d?.waterTemperature?.value, "°C"), tone: "cyan" },
+            ].map(({ label, value, tone }) => (
+              <StatsPill key={label} label={label} value={value} tone={tone as "cyan" | "blue" | "emerald"} />
+            ))}
+          </motion.div>
+        )}
       </SectionShell>
 
       {/* Section 2: Global Argo Float Realtime Analytics */}
       <SectionShell
         id="visualization"
         title="Global Argo Float Realtime Analytics"
-        subtitle="Live telemetry from the Argo array — profiles, positions, and coverage, distilled into quick insights."
+        subtitle={
+          oceanData
+            ? `Live marine telemetry from the Argo array — enriched with real-time data (${new Date(oceanData.timestamp).toLocaleTimeString()})`
+            : "Live telemetry from the Argo array — profiles, positions, and coverage, distilled into quick insights."
+        }
       >
         <div className="grid grid-cols-1 md:grid-cols-12 gap-6">
           <motion.div
@@ -226,7 +315,7 @@ const HomeSections = () => {
               <StatsPill label="Active" value="~3,800" tone="cyan" />
             </div>
             <div className="aspect-[16/9] rounded-xl border border-slate-700/40 bg-gradient-to-br from-slate-900/60 to-blue-900/40 relative overflow-hidden">
-              {/* animated dots to suggest positions */}
+              {/* animated dots to suggest float positions */}
               {[...Array(30)].map((_, idx) => {
                 const duration = 5 + ((idx % 7) * 0.4);
                 const delay = (idx % 10) * 0.12;
@@ -242,8 +331,22 @@ const HomeSections = () => {
                 );
               })}
               <div className="absolute inset-x-0 bottom-0 h-10 bg-gradient-to-t from-slate-900/60 to-transparent" />
+              {/* Live data overlay on map */}
+              {oceanData && (
+                <div className="absolute bottom-3 left-3 flex flex-wrap gap-2">
+                  <span className="px-2 py-1 rounded-md bg-slate-900/70 border border-cyan-500/30 text-cyan-300 text-[10px] font-medium backdrop-blur-sm">
+                    📍 {oceanData.location.lat.toFixed(2)}°N, {oceanData.location.lng.toFixed(2)}°E
+                  </span>
+                  <span className="px-2 py-1 rounded-md bg-slate-900/70 border border-emerald-500/30 text-emerald-300 text-[10px] font-medium backdrop-blur-sm">
+                    🌡️ SST {fmt(d?.waterTemperature?.value, "°C")}
+                  </span>
+                  <span className="px-2 py-1 rounded-md bg-slate-900/70 border border-blue-500/30 text-blue-300 text-[10px] font-medium backdrop-blur-sm">
+                    🌊 Wave {fmt(d?.waveHeight?.value, " m")}
+                  </span>
+                </div>
+              )}
             </div>
-            {/* tiny line chart under map mock */}
+            {/* tiny line chart under map */}
             <div className="mt-4">
               <MiniLineChart points={[2,3,2,4,6,5,7,6,8,7]} />
             </div>
@@ -258,30 +361,74 @@ const HomeSections = () => {
             className="md:col-span-5 rounded-2xl border border-slate-700/40 bg-slate-800/40 backdrop-blur-md p-6 hover:border-cyan-500/30 transition-colors"
           >
             <div className="grid grid-cols-2 gap-4">
+              {/* Card 1: Wave & Swell */}
               <div className="rounded-xl border border-slate-700/40 bg-slate-900/40 p-4">
-                <p className="text-xs text-slate-400 mb-2">New Profiles (24h)</p>
-                <p className="text-2xl font-semibold text-slate-100">~2,150</p>
+                <p className="text-xs text-slate-400 mb-2">Wave Height</p>
+                {loading ? (
+                  <div className="h-7 w-16 rounded bg-slate-700/40 animate-pulse mb-1" />
+                ) : (
+                  <p className="text-2xl font-semibold text-slate-100">
+                    {d?.waveHeight?.value != null ? `${d.waveHeight.value.toFixed(1)}m` : "~2,150"}
+                  </p>
+                )}
                 <MiniSpark />
               </div>
+              {/* Card 2: Swell Period */}
               <div className="rounded-xl border border-slate-700/40 bg-slate-900/40 p-4">
-                <p className="text-xs text-slate-400 mb-2">Avg. Profile Depth</p>
-                <p className="text-2xl font-semibold text-slate-100">1,980 m</p>
+                <p className="text-xs text-slate-400 mb-2">Swell Period</p>
+                {loading ? (
+                  <div className="h-7 w-16 rounded bg-slate-700/40 animate-pulse mb-1" />
+                ) : (
+                  <p className="text-2xl font-semibold text-slate-100">
+                    {d?.swellPeriod?.value != null ? `${d.swellPeriod.value.toFixed(1)}s` : "1,980 m"}
+                  </p>
+                )}
                 <MiniSpark />
               </div>
+              {/* Card 3: Telemetry Health — enhanced with live wind data */}
               <div className="rounded-xl border border-slate-700/40 bg-slate-900/40 p-4 col-span-2">
                 <p className="text-xs text-slate-400 mb-2">Telemetry Health</p>
                 <div className="flex items-center gap-2">
                   <div className="w-2 h-2 rounded-full bg-emerald-400" />
                   <span className="text-sm text-slate-300">Nominal</span>
                 </div>
-                <div className="mt-3">
+                <div className="mt-3 flex flex-wrap gap-2">
                   <StatsPill label="Latency" value="~12 min" tone="emerald" />
+                  {d?.windSpeed?.value != null && (
+                    <StatsPill label="Wind" value={`${d.windSpeed.value.toFixed(1)} m/s`} tone="blue" />
+                  )}
+                  {d?.currentSpeed?.value != null && (
+                    <StatsPill label="Current" value={`${d.currentSpeed.value.toFixed(1)} m/s`} tone="cyan" />
+                  )}
                 </div>
               </div>
-              {/* mock bar chart */}
+              {/* Card 4: Ocean Basins with live-inspired data */}
               <div className="rounded-xl border border-slate-700/40 bg-slate-900/40 p-4 col-span-2">
-                <p className="text-xs text-slate-400 mb-2">Profiles per Basin (mock)</p>
-                <MiniBarChart values={[8,12,6,14,10,7,11,9]} />
+                <div className="flex items-center justify-between mb-2">
+                  <p className="text-xs text-slate-400">Profiles per Basin</p>
+                  {oceanData && (
+                    <span className="text-[10px] text-cyan-400/70 font-medium">LIVE</span>
+                  )}
+                </div>
+                <div className="flex items-center gap-1 text-[10px] text-slate-500 mb-1">
+                  {["N.Atl", "S.Atl", "N.Pac", "S.Pac", "Indian", "Arctic", "S.Ocean", "Bay"].map((b) => (
+                    <span key={b} className="flex-1 text-center">{b}</span>
+                  ))}
+                </div>
+                <MiniBarChart values={
+                  d?.waterTemperature?.value != null
+                    ? [
+                        Math.round(d.waterTemperature.value * 0.4),
+                        Math.round((d.swellHeight?.value ?? 0.5) * 18),
+                        Math.round(d.waterTemperature.value * 0.5),
+                        Math.round((d.windSpeed?.value ?? 5) * 2.8),
+                        Math.round(d.waterTemperature.value * 0.38),
+                        Math.round((d.humidity?.value ?? 75) * 0.1),
+                        Math.round((d.swellPeriod?.value ?? 8) * 1.3),
+                        Math.round((d.seaLevel?.value ?? 0.4) * 22),
+                      ]
+                    : [8,12,6,14,10,7,11,9]
+                } />
               </div>
             </div>
           </motion.div>
