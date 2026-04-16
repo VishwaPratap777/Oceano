@@ -1,15 +1,16 @@
 import { Router } from "express";
-import { chat } from "../services/groq.js";
+import { chat } from "../services/gemini.js";
+import { fetchOceanData } from "../services/stormglass.js";
 
 const router = Router();
 
 /**
  * POST /api/chat
- * Body: { message: string, history?: Array<{ role: string, content: string }> }
+ * Body: { message: string, history?: Array<{ role: string, content: string }>, lat?: number, lng?: number }
  */
 router.post("/", async (req, res, next) => {
   try {
-    const { message, history } = req.body;
+    const { message, history, lat, lng } = req.body;
 
     if (!message || typeof message !== "string" || !message.trim()) {
       return res.status(400).json({
@@ -18,7 +19,15 @@ router.post("/", async (req, res, next) => {
       });
     }
 
-    const result = await chat(message.trim(), history || []);
+    // Attempt to fetch real-time ocean data for context
+    let oceanData = null;
+    try {
+      oceanData = await fetchOceanData(lat, lng);
+    } catch (err) {
+      console.warn("⚠️  Could not fetch real-time ocean data for chatbot context:", err.message);
+    }
+
+    const result = await chat(message.trim(), history || [], oceanData);
 
     res.json({
       reply: result.reply,
@@ -26,19 +35,6 @@ router.post("/", async (req, res, next) => {
       timestamp: new Date().toISOString(),
     });
   } catch (err) {
-    // Handle Groq-specific errors if necessary
-    if (err?.status === 401 || err?.message?.includes("API key")) {
-      return res.status(401).json({
-        error: "Invalid Groq API key",
-        status: 401,
-      });
-    }
-    if (err?.status === 429 || err?.message?.includes("quota")) {
-      return res.status(429).json({
-        error: "Groq rate limit exceeded. Please try again in a moment.",
-        status: 429,
-      });
-    }
     next(err);
   }
 });

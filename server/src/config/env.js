@@ -11,9 +11,11 @@ const config = {
   stormglassApiKey: process.env.STORMGLASS_API_KEY || "",
   groqApiKey: process.env.GROQ_API_KEY || "",
 
-  // Bay of Bengal (Chennai) defaults
-  defaultLat: 13.0827,
-  defaultLng: 80.2707,
+  geminiApiKey: process.env.GEMINI_API_KEY || "",
+
+  // Indian Coast (Mumbai) defaults
+  defaultLat: 18.9219,
+  defaultLng: 72.8222,
 };
 
 // Warn about missing keys at startup (non-fatal)
@@ -21,7 +23,10 @@ if (!config.stormglassApiKey) {
   console.warn("⚠️  STORMGLASS_API_KEY not set — ocean endpoint will return mock data");
 }
 if (!config.groqApiKey) {
-  console.warn("⚠️  GROQ_API_KEY not set — chatbot will use fallback responses");
+  console.warn("⚠️  GROQ_API_KEY not set — fallback Groq service might not work");
+}
+if (!config.geminiApiKey) {
+  console.warn("⚠️  GEMINI_API_KEY not set — chatbot will use fallback Groq service or static responses");
 }
 
 export default config;
