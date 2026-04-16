@@ -1,9 +1,13 @@
 import express from "express";
 import cors from "cors";
+import path from "path";
+import { fileURLToPath } from "url";
 import config from "./config/env.js";
 import errorHandler from "./middleware/errorHandler.js";
 import oceanRouter from "./routes/ocean.js";
 import chatRouter from "./routes/chat.js";
+
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
 const app = express();
 
@@ -29,6 +33,22 @@ app.use("/api/chat", chatRouter);
 
 // ── Error handling ──────────────────────────────────────────────────────
 app.use(errorHandler);
+
+// ── Static assets (Production) ──────────────────────────────────────────
+const DIST_PATH = path.join(__dirname, "../../dist");
+app.use(express.static(DIST_PATH));
+
+// Handle SPA routing: serve index.html for all non-API routes
+app.get("*", (req, res) => {
+  if (!req.path.startsWith("/api")) {
+    res.sendFile(path.join(DIST_PATH, "index.html"), (err) => {
+      if (err) {
+        // Fallback for cases where dist/index.html doesn't exist yet (e.g. initial dev setup)
+        res.status(404).json({ error: "Frontend build not found. Run 'npm run build' first." });
+      }
+    });
+  }
+});
 
 // ── Start server ────────────────────────────────────────────────────────
 app.listen(config.port, () => {
