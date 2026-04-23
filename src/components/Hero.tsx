@@ -43,14 +43,14 @@ const Hero = () => {
     if (!section) return;
     let pausedByObserver = false;
     const pauseAll = () => {
-      try { videoRef.current?.pause(); } catch {}
-      try { v0Ref.current?.pause(); } catch {}
-      try { v1Ref.current?.pause(); } catch {}
+      try { videoRef.current?.pause(); } catch { }
+      try { v0Ref.current?.pause(); } catch { }
+      try { v1Ref.current?.pause(); } catch { }
     };
     const playAll = () => {
-      try { videoRef.current?.play().catch(() => {}); } catch {}
-      try { v0Ref.current?.play().catch(() => {}); } catch {}
-      try { v1Ref.current?.play().catch(() => {}); } catch {}
+      try { videoRef.current?.play().catch(() => { }); } catch { }
+      try { v0Ref.current?.play().catch(() => { }); } catch { }
+      try { v1Ref.current?.play().catch(() => { }); } catch { }
     };
     const io = new IntersectionObserver((entries) => {
       const e = entries[0];
@@ -89,13 +89,13 @@ const Hero = () => {
     const v1 = v1Ref.current;
     const playSafe = (v?: HTMLVideoElement | null) => {
       if (!v) return;
-      try { v.play().catch(() => {}); } catch {}
+      try { v.play().catch(() => { }); } catch { }
     };
     playSafe(v0);
     playSafe(v1);
   }, []);
 
-  // Helper: schedule a crossfade just before the current active video ends
+
   const scheduleCrossfade = useCallback(() => {
     const a = activeVid === 0 ? v0Ref.current : v1Ref.current;
     const d = activeVid === 0 ? v0DurRef.current : v1DurRef.current;
@@ -106,7 +106,7 @@ const Hero = () => {
     if (cfTimerRef.current) window.clearTimeout(cfTimerRef.current);
     cfTimerRef.current = window.setTimeout(() => {
       // trigger startCrossfade via synthetic branch by nudging timeupdate handler logic
-      try { a.currentTime = Math.min(a.duration - needed + 0.01, a.duration - 0.05); } catch {}
+      try { a.currentTime = Math.min(a.duration - needed + 0.01, a.duration - 0.05); } catch { }
     }, fireInMs);
   }, [activeVid, crossfadeMs]);
 
@@ -164,7 +164,7 @@ const Hero = () => {
       setStairsDone(true);
       // Try to start video playback when stairs end
       if (videoRef.current) {
-        try { videoRef.current.play(); } catch {}
+        try { videoRef.current.play(); } catch { }
       }
     };
     window.addEventListener('stairs:complete', onStairsComplete);
@@ -190,7 +190,7 @@ const Hero = () => {
         const v = parseFloat(savedVol);
         if (!Number.isNaN(v)) setVolume(Math.min(1, Math.max(0, v)));
       }
-    } catch {}
+    } catch { }
   }, []);
 
   // Apply base audio settings to element (scroll ducking handled below after scrollYProgress is available)
@@ -201,16 +201,16 @@ const Hero = () => {
     a.volume = isMuted ? 0 : Math.max(0, Math.min(1, volume));
     try {
       // Attempt to play; will succeed if muted or after user gesture
-      a.play().catch(() => {});
-    } catch {}
+      a.play().catch(() => { });
+    } catch { }
   }, [isMuted, volume]);
 
   // Persist settings
   useEffect(() => {
-    try { localStorage.setItem('oceanAudioMuted', String(isMuted)); } catch {}
+    try { localStorage.setItem('oceanAudioMuted', String(isMuted)); } catch { }
   }, [isMuted]);
   useEffect(() => {
-    try { localStorage.setItem('oceanAudioVolume', String(volume)); } catch {}
+    try { localStorage.setItem('oceanAudioVolume', String(volume)); } catch { }
   }, [volume]);
 
   // On first user interaction, if user had unmuted previously, try to play
@@ -219,7 +219,7 @@ const Hero = () => {
       const a = audioRef.current;
       if (!a) return;
       if (!isMuted) {
-        try { a.play().catch(() => {}); } catch {}
+        try { a.play().catch(() => { }); } catch { }
       }
       window.removeEventListener('pointerdown', onFirstGesture);
       window.removeEventListener('keydown', onFirstGesture);
@@ -251,10 +251,10 @@ const Hero = () => {
       try {
         if (!started) {
           b.currentTime = 0.01;
-          b.play().catch(() => {});
+          b.play().catch(() => { });
           started = true;
         }
-      } catch {}
+      } catch { }
       // swap opacities to reveal next video
       setVidOpacities(activeVid === 0 ? [0, 1] : [1, 0]);
       window.setTimeout(() => {
@@ -272,7 +272,7 @@ const Hero = () => {
         // Prime next video and only crossfade when it has data ready
         try {
           b.currentTime = 0.01;
-        } catch {}
+        } catch { }
         if (b.readyState >= 3 /* HAVE_FUTURE_DATA */) {
           startCrossfade();
         } else {
@@ -289,7 +289,7 @@ const Hero = () => {
     const onEnded = () => {
       if (isFading) return;
       // Ensure the other video is ready, then crossfade immediately
-      try { b.currentTime = 0.01; } catch {}
+      try { b.currentTime = 0.01; } catch { }
       if (b.readyState >= 3) {
         startCrossfade();
       } else {
@@ -312,11 +312,11 @@ const Hero = () => {
   }, [activeVid, crossfadeMs, scheduleCrossfade]);
 
   // Scroll progress for parallax effects
-  const { scrollYProgress } = useScroll({ 
-    target: sectionRef, 
-    offset: ["start end", "end start"] 
+  const { scrollYProgress } = useScroll({
+    target: sectionRef,
+    offset: ["start end", "end start"]
   });
-  
+
   // Parallax transforms for different elements
   const titleY = useTransform(scrollYProgress, [0, 1], [0, -30]);
   // Snap parallax to integers to avoid subpixel seams on masked edges
@@ -338,7 +338,7 @@ const Hero = () => {
     try {
       const p = (scrollYProgress as any)?.get ? (scrollYProgress as any).get() : 0;
       apply(p);
-    } catch {}
+    } catch { }
     // Subscribe to changes
     const unsub = (scrollYProgress as any)?.on ? (scrollYProgress as any).on("change", apply) : undefined;
     return () => { if (unsub) unsub(); };
@@ -346,11 +346,11 @@ const Hero = () => {
 
   return (
     <>
-      <section 
-        ref={sectionRef} 
+      <section
+        ref={sectionRef}
         className="fixed top-0 left-0 w-full overflow-hidden z-10"
-        style={{ 
-          height: '100vh', 
+        style={{
+          height: '100vh',
           width: '100vw',
           minHeight: '100vh',
           maxHeight: '100vh',
@@ -358,376 +358,376 @@ const Hero = () => {
           position: 'fixed'
         }}
       >
-      
-      {/* Video Background */}
-      <video
-        ref={videoRef}
-        className="absolute inset-0 w-full h-full object-cover"
-        autoPlay
-        muted
-        loop
-        playsInline
-        preload="metadata"
-        onLoadedData={handleVideoLoad}
-        onCanPlayThrough={handleCanPlayThrough}
-        style={{ 
-          objectPosition: 'center center',
-          objectFit: 'cover',
-          height: '100vh',
-          width: '100vw',
-          display: 'block',
-          zIndex: 0,
-          opacity: 1,
-          transition: 'opacity 300ms ease',
-          willChange: 'opacity',
-          transform: 'translate3d(0,0,0)',
-          backfaceVisibility: 'hidden',
-          WebkitBackfaceVisibility: 'hidden'
-        }}
-      >
-        <source src="/seav.mp4" type="video/mp4" />
-      </video>
 
-      {/* Poster overlay (frame1.jpg) above the video to prevent any flash before ready */}
-      <div
-        className="absolute inset-0"
-        style={{
-          backgroundImage: "url('/frame1.jpg')",
-          backgroundSize: 'cover',
-          backgroundPosition: 'center',
-          opacity: videoCanPlay ? 0 : 1,
-          transition: 'opacity 400ms ease',
-          zIndex: 5,
-          pointerEvents: 'none'
-        }}
-      />
-      
-      {/* Dark Overlay above video */}
-      <div className="absolute inset-0 bg-black/40" style={{ zIndex: 10 }} />
-      
-      {/* Subtle animated grain overlay (SVG noise), low opacity */}
-      <div className="absolute inset-0 pointer-events-none" style={{ zIndex: 15, mixBlendMode: 'overlay', opacity: 0.08 }}>
-        <svg className="w-full h-full" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="none">
-          <filter id="grainNoise">
-            <feTurbulence type="fractalNoise" baseFrequency="0.9" numOctaves="2" stitchTiles="stitch" seed="2">
-              <animate attributeName="baseFrequency" dur="6s" values="0.85;0.95;0.85" repeatCount="indefinite" />
-            </feTurbulence>
-            <feColorMatrix type="saturate" values="0" />
-          </filter>
-          <rect width="100%" height="100%" filter="url(#grainNoise)" />
-        </svg>
-      </div>
+        {/* Video Background */}
+        <video
+          ref={videoRef}
+          className="absolute inset-0 w-full h-full object-cover"
+          autoPlay
+          muted
+          loop
+          playsInline
+          preload="metadata"
+          onLoadedData={handleVideoLoad}
+          onCanPlayThrough={handleCanPlayThrough}
+          style={{
+            objectPosition: 'center center',
+            objectFit: 'cover',
+            height: '100vh',
+            width: '100vw',
+            display: 'block',
+            zIndex: 0,
+            opacity: 1,
+            transition: 'opacity 300ms ease',
+            willChange: 'opacity',
+            transform: 'translate3d(0,0,0)',
+            backfaceVisibility: 'hidden',
+            WebkitBackfaceVisibility: 'hidden'
+          }}
+        >
+          <source src="/seav.mp4" type="video/mp4" />
+        </video>
 
-      {/* Navigation above overlays and particles */}
-      <div className="absolute top-0 left-0 right-0 p-8" style={{ zIndex: 30 }}>
-        <div className="flex justify-between items-center">
-          <motion.div 
-            initial={{ opacity: 0, x: -20 }}
-            animate={{ opacity: 1, x: 0 }}
-            transition={{ duration: 0.6 }}
-            className="text-2xl font-bold text-white"
-          >
-            Ocean<span className="text-blue-300">Data</span>
-          </motion.div>
-          
-          {isLanding && (
+        {/* Poster overlay (frame1.jpg) above the video to prevent any flash before ready */}
+        <div
+          className="absolute inset-0"
+          style={{
+            backgroundImage: "url('/frame1.jpg')",
+            backgroundSize: 'cover',
+            backgroundPosition: 'center',
+            opacity: videoCanPlay ? 0 : 1,
+            transition: 'opacity 400ms ease',
+            zIndex: 5,
+            pointerEvents: 'none'
+          }}
+        />
+
+        {/* Dark Overlay above video */}
+        <div className="absolute inset-0 bg-black/40" style={{ zIndex: 10 }} />
+
+        {/* Subtle animated grain overlay (SVG noise), low opacity */}
+        <div className="absolute inset-0 pointer-events-none" style={{ zIndex: 15, mixBlendMode: 'overlay', opacity: 0.08 }}>
+          <svg className="w-full h-full" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="none">
+            <filter id="grainNoise">
+              <feTurbulence type="fractalNoise" baseFrequency="0.9" numOctaves="2" stitchTiles="stitch" seed="2">
+                <animate attributeName="baseFrequency" dur="6s" values="0.85;0.95;0.85" repeatCount="indefinite" />
+              </feTurbulence>
+              <feColorMatrix type="saturate" values="0" />
+            </filter>
+            <rect width="100%" height="100%" filter="url(#grainNoise)" />
+          </svg>
+        </div>
+
+        {/* Navigation above overlays and particles */}
+        <div className="absolute top-0 left-0 right-0 p-8" style={{ zIndex: 30 }}>
+          <div className="flex justify-between items-center">
             <motion.div
-              initial={{ opacity: 0, x: 20 }}
+              initial={{ opacity: 0, x: -20 }}
               animate={{ opacity: 1, x: 0 }}
-              transition={{ duration: 0.6, delay: 0.2 }}
+              transition={{ duration: 0.6 }}
+              className="text-2xl font-bold text-white"
             >
-              {/* Use default variant (ripple) to avoid invalid value while keeping same UI */}
-              <TransitionLink to="/login">
-                <Button 
-                  variant="ocean" 
-                  size="sm"
+              Ocean<span className="text-blue-300">Data</span>
+            </motion.div>
+
+            {isLanding && (
+              <motion.div
+                initial={{ opacity: 0, x: 20 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ duration: 0.6, delay: 0.2 }}
+              >
+                {/* Use default variant (ripple) to avoid invalid value while keeping same UI */}
+                <TransitionLink to="/login">
+                  <Button
+                    variant="ocean"
+                    size="sm"
+                    className="group hover:text-white"
+                  >
+                    Sign In
+                  </Button>
+                </TransitionLink>
+              </motion.div>
+            )}
+          </div>
+        </div>
+
+        {/* Main Content Overlay - only show after video loads */}
+        {showContent && (
+          <motion.div
+            initial={{ opacity: 1, y: 0 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.3 }}
+            className="absolute inset-0 flex flex-col items-center justify-center text-center px-6 max-w-6xl mx-auto"
+            style={{ height: '100vh', width: '100vw', zIndex: 30 }}
+          >
+            {/* Main Heading with Ocean Background Clipped Text */}
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ duration: 4, ease: 'easeOut', delay: 0.6 }}
+              className="mb-4 text-center mt-6"
+              style={{ marginTop: '50px' }}
+            >
+              <motion.h1
+                style={{ y: roundedTitleY }}
+                className="text-[5.2rem] sm:text-[8.5rem] md:text-[14.2rem] lg:text-[23.8rem] font-black leading-none text-center"
+              >
+                {/* Video-clipped text using SVG mask. The hidden span sizes the box to the text,
+                  and an absolutely positioned SVG masks a video to the text shape. */}
+                <span className="relative inline-block align-middle" style={{ lineHeight: 1, paddingLeft: '0.08em', paddingRight: '0.08em', overflow: 'hidden' }}>
+                  {/* Sizing ghost: matches text sizing without visual output */}
+                  <span
+                    aria-hidden="true"
+                    className="invisible select-none pointer-events-none block"
+                    style={{
+                      whiteSpace: 'nowrap',
+                      lineHeight: 1,
+                    }}
+                  >
+                    DIVE DEEPER
+                  </span>
+                  {/* Masked video overlay */}
+                  <svg
+                    className="absolute block"
+                    viewBox="0 0 1400 420"
+                    preserveAspectRatio="xMidYMid slice"
+                    style={{ top: '-4px', left: '-4px', position: 'absolute', width: 'calc(100% + 8px)', height: 'calc(100% + 8px)', willChange: 'transform', transform: 'translateZ(0)', shapeRendering: 'geometricPrecision' }}
+                    aria-hidden="true"
+                    xmlns="http://www.w3.org/2000/svg"
+                  >
+                    <defs>
+                      {/* Water ripple filter for subtle refraction effect */}
+                      <filter id="waterRipple" x="-20%" y="-20%" width="140%" height="140%" filterUnits="objectBoundingBox">
+                        <feTurbulence type="fractalNoise" baseFrequency="0.003 0.008" numOctaves="2" seed="3" result="noise" />
+                        <feDisplacementMap in="SourceGraphic" in2="noise" scale="0" xChannelSelector="R" yChannelSelector="G">
+                          {/* Ramp up once, then gently ramp down and stop (no looping) */}
+                          <animate attributeName="scale" dur="1.2s" values="0;8" fill="freeze" />
+                          <animate attributeName="scale" dur="5s" values="8;0" begin="1.2s" fill="freeze" />
+                        </feDisplacementMap>
+                      </filter>
+                      <mask id="oceanTextMask" maskUnits="userSpaceOnUse" maskContentUnits="userSpaceOnUse">
+                        {/* Black background hides everything by default. Overscan increased to avoid edge seams */}
+                        <rect x="-20" y="-20" width="1440" height="460" fill="black" />
+                        {/* White text reveals the video where the glyphs are */}
+                        <text
+                          x="700"
+                          y="210"
+                          fill="white"
+                          textAnchor="middle"
+                          dominantBaseline="middle"
+                          fontWeight="900"
+                          style={{
+                            fontFamily: 'inherit',
+                            fontSize: '120px',
+                            letterSpacing: '0em',
+                          }}
+                        >
+                          DIVE DEEPER
+                        </text>
+                      </mask>
+                    </defs>
+                    {/* Use foreignObject to place HTML video and mask it with the text. Overscan to match mask */}
+                    <g filter="url(#waterRipple)">
+                      <foreignObject x="-20" y="-20" width="1440" height="460" mask="url(#oceanTextMask)">
+                        <div style={{ position: 'relative', width: '100%', height: '100%' }}>
+                          {/* Video A */}
+                          <video
+                            ref={v0Ref as any}
+                            src="/seav3.mp4"
+                            autoPlay
+                            muted
+                            playsInline
+                            preload="metadata"
+                            loop
+                            onLoadedMetadata={(e) => {
+                              v0DurRef.current = e.currentTarget.duration || 0;
+                              if (activeVid === 0) {
+                                try { e.currentTarget.play().catch(() => { }); } catch { }
+                              }
+                            }}
+                            onCanPlay={() => {
+                              if (activeVid === 0) {
+                                try { v0Ref.current?.play().catch(() => { }); } catch { }
+                              }
+                            }}
+                            style={{
+                              position: 'absolute',
+                              inset: 0,
+                              width: '100%',
+                              height: '100%',
+                              objectFit: 'cover',
+                              display: 'block',
+                              opacity: vidOpacities[0],
+                              transition: `opacity ${crossfadeMs}ms ease`,
+                              willChange: 'opacity',
+                              transform: 'translate3d(0,0,0)',
+                              backfaceVisibility: 'hidden'
+                            }}
+                          />
+                          {/* Video B */}
+                          <video
+                            ref={v1Ref as any}
+                            src="/seav2.mp4"
+                            autoPlay
+                            muted
+                            playsInline
+                            preload="metadata"
+                            loop
+                            onLoadedMetadata={(e) => {
+                              v1DurRef.current = e.currentTarget.duration || 0;
+                              if (activeVid === 1) {
+                                try { e.currentTarget.play().catch(() => { }); } catch { }
+                              }
+                            }}
+                            onCanPlay={() => {
+                              if (activeVid === 1) {
+                                try { v1Ref.current?.play().catch(() => { }); } catch { }
+                              }
+                            }}
+                            style={{
+                              position: 'absolute',
+                              inset: 0,
+                              width: '100%',
+                              height: '100%',
+                              objectFit: 'cover',
+                              display: 'block',
+                              opacity: vidOpacities[1],
+                              transition: `opacity ${crossfadeMs}ms ease`,
+                              willChange: 'opacity',
+                              transform: 'translate3d(0,0,0)',
+                              backfaceVisibility: 'hidden'
+                            }}
+                          />
+                        </div>
+                      </foreignObject>
+                    </g>
+                  </svg>
+                </span>
+              </motion.h1>
+            </motion.div>
+
+            {/* Subtitle removed as requested */}
+
+            {/* CTA Buttons */}
+            <motion.div
+              initial={{ opacity: 1, y: 50 }}
+              animate={{ opacity: 1, y: startDrop ? 0 : 50 }}
+              transition={{ type: 'spring', stiffness: 185, damping: 20, mass: 1.0, delay: 0.12 }}
+              className="flex flex-col sm:flex-row gap-3 justify-center items-center mb-4 md:mb-6"
+            >
+              {/* Disable overlay to match previous 'none' behavior without using an invalid variant */}
+              <TransitionLink to="/chat" noOverlay>
+                <Button
+                  variant="ocean"
+                  size="lg"
                   className="group hover:text-white"
                 >
-                  Sign In
+                  Wave Us
+                  <ArrowRight className="ml-2 h-5 w-5 group-hover:translate-x-1 transition-transform" />
+                </Button>
+              </TransitionLink>
+
+              <TransitionLink to="/learn" noOverlay>
+                <Button
+                  variant="outline"
+                  size="lg"
+                  className="bg-card/50 backdrop-blur-sm hover:bg-card/80 border-primary/20 hover:border-primary/40"
+                >
+                  Learn More
                 </Button>
               </TransitionLink>
             </motion.div>
-          )}
-        </div>
-      </div>
 
-      {/* Main Content Overlay - only show after video loads */}
-      {showContent && (
-        <motion.div 
-          initial={{ opacity: 1, y: 0 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.3 }}
-          className="absolute inset-0 flex flex-col items-center justify-center text-center px-6 max-w-6xl mx-auto"
-          style={{ height: '100vh', width: '100vw', zIndex: 30 }}
-        >
-          {/* Main Heading with Ocean Background Clipped Text */}
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ duration: 4, ease: 'easeOut', delay: 0.6 }}
-            className="mb-4 text-center mt-6"
-            style={{ marginTop: '50px' }}
-          >
-            <motion.h1 
-              style={{ y: roundedTitleY }}
-              className="text-[5.2rem] sm:text-[8.5rem] md:text-[14.2rem] lg:text-[23.8rem] font-black leading-none text-center"
-            >
-              {/* Video-clipped text using SVG mask. The hidden span sizes the box to the text,
-                  and an absolutely positioned SVG masks a video to the text shape. */}
-              <span className="relative inline-block align-middle" style={{ lineHeight: 1, paddingLeft: '0.08em', paddingRight: '0.08em', overflow: 'hidden' }}>
-                {/* Sizing ghost: matches text sizing without visual output */}
-                <span
-                  aria-hidden="true"
-                  className="invisible select-none pointer-events-none block"
-                  style={{
-                    whiteSpace: 'nowrap',
-                    lineHeight: 1,
-                  }}
-                >
-                  DIVE DEEPER
-                </span>
-                {/* Masked video overlay */}
-                <svg
-                  className="absolute block"
-                  viewBox="0 0 1400 420"
-                  preserveAspectRatio="xMidYMid slice"
-                  style={{ top: '-4px', left: '-4px', position: 'absolute', width: 'calc(100% + 8px)', height: 'calc(100% + 8px)', willChange: 'transform', transform: 'translateZ(0)', shapeRendering: 'geometricPrecision' }}
-                  aria-hidden="true"
-                  xmlns="http://www.w3.org/2000/svg"
-                >
-                  <defs>
-                    {/* Water ripple filter for subtle refraction effect */}
-                    <filter id="waterRipple" x="-20%" y="-20%" width="140%" height="140%" filterUnits="objectBoundingBox">
-                      <feTurbulence type="fractalNoise" baseFrequency="0.003 0.008" numOctaves="2" seed="3" result="noise" />
-                      <feDisplacementMap in="SourceGraphic" in2="noise" scale="0" xChannelSelector="R" yChannelSelector="G">
-                        {/* Ramp up once, then gently ramp down and stop (no looping) */}
-                        <animate attributeName="scale" dur="1.2s" values="0;8" fill="freeze" />
-                        <animate attributeName="scale" dur="5s" values="8;0" begin="1.2s" fill="freeze" />
-                      </feDisplacementMap>
-                    </filter>
-                    <mask id="oceanTextMask" maskUnits="userSpaceOnUse" maskContentUnits="userSpaceOnUse">
-                      {/* Black background hides everything by default. Overscan increased to avoid edge seams */}
-                      <rect x="-20" y="-20" width="1440" height="460" fill="black" />
-                      {/* White text reveals the video where the glyphs are */}
-                      <text
-                        x="700"
-                        y="210"
-                        fill="white"
-                        textAnchor="middle"
-                        dominantBaseline="middle"
-                        fontWeight="900"
-                        style={{
-                          fontFamily: 'inherit',
-                          fontSize: '120px',
-                          letterSpacing: '0em',
-                        }}
-                      >
-                        DIVE DEEPER
-                      </text>
-                    </mask>
-                  </defs>
-                  {/* Use foreignObject to place HTML video and mask it with the text. Overscan to match mask */}
-                  <g filter="url(#waterRipple)">
-                    <foreignObject x="-20" y="-20" width="1440" height="460" mask="url(#oceanTextMask)">
-                      <div style={{ position: 'relative', width: '100%', height: '100%' }}>
-                        {/* Video A */}
-                        <video
-                          ref={v0Ref as any}
-                          src="/seav3.mp4"
-                          autoPlay
-                          muted
-                          playsInline
-                          preload="metadata"
-                          loop
-                          onLoadedMetadata={(e) => {
-                            v0DurRef.current = e.currentTarget.duration || 0;
-                            if (activeVid === 0) {
-                              try { e.currentTarget.play().catch(() => {}); } catch {}
-                            }
-                          }}
-                          onCanPlay={() => {
-                            if (activeVid === 0) {
-                              try { v0Ref.current?.play().catch(() => {}); } catch {}
-                            }
-                          }}
-                          style={{
-                            position: 'absolute',
-                            inset: 0,
-                            width: '100%',
-                            height: '100%',
-                            objectFit: 'cover',
-                            display: 'block',
-                            opacity: vidOpacities[0],
-                            transition: `opacity ${crossfadeMs}ms ease`,
-                            willChange: 'opacity',
-                            transform: 'translate3d(0,0,0)',
-                            backfaceVisibility: 'hidden'
-                          }}
-                        />
-                        {/* Video B */}
-                        <video
-                          ref={v1Ref as any}
-                          src="/seav2.mp4"
-                          autoPlay
-                          muted
-                          playsInline
-                          preload="metadata"
-                          loop
-                          onLoadedMetadata={(e) => {
-                            v1DurRef.current = e.currentTarget.duration || 0;
-                            if (activeVid === 1) {
-                              try { e.currentTarget.play().catch(() => {}); } catch {}
-                            }
-                          }}
-                          onCanPlay={() => {
-                            if (activeVid === 1) {
-                              try { v1Ref.current?.play().catch(() => {}); } catch {}
-                            }
-                          }}
-                          style={{
-                            position: 'absolute',
-                            inset: 0,
-                            width: '100%',
-                            height: '100%',
-                            objectFit: 'cover',
-                            display: 'block',
-                            opacity: vidOpacities[1],
-                            transition: `opacity ${crossfadeMs}ms ease`,
-                            willChange: 'opacity',
-                            transform: 'translate3d(0,0,0)',
-                            backfaceVisibility: 'hidden'
-                          }}
-                        />
-                      </div>
-                    </foreignObject>
-                  </g>
-                </svg>
-              </span>
-            </motion.h1>
+            {/* Scroll arrow removed as requested */}
           </motion.div>
+        )}
 
-          {/* Subtitle removed as requested */}
-
-          {/* CTA Buttons */}
-          <motion.div 
-            initial={{ opacity: 1, y: 50 }}
-            animate={{ opacity: 1, y: startDrop ? 0 : 50 }}
-            transition={{ type: 'spring', stiffness: 185, damping: 20, mass: 1.0, delay: 0.12 }}
-            className="flex flex-col sm:flex-row gap-3 justify-center items-center mb-4 md:mb-6"
-          >
-            {/* Disable overlay to match previous 'none' behavior without using an invalid variant */}
-            <TransitionLink to="/chat" noOverlay>
-              <Button 
-                variant="ocean" 
-                size="lg"
-                className="group hover:text-white"
-              >
-                Wave Us
-                <ArrowRight className="ml-2 h-5 w-5 group-hover:translate-x-1 transition-transform" />
-              </Button>
-            </TransitionLink>
-            
-            <TransitionLink to="/learn" noOverlay>
-              <Button 
-                variant="outline" 
-                size="lg"
-                className="bg-card/50 backdrop-blur-sm hover:bg-card/80 border-primary/20 hover:border-primary/40"
-              >
-                Learn More
-              </Button>
-            </TransitionLink>
-          </motion.div>
-
-          {/* Scroll arrow removed as requested */}
-        </motion.div>
-      )}
-
-      {/* Ambient audio element (hidden) */}
-      <audio
-        ref={audioRef}
-        loop={false}
-        preload="auto"
-        muted={isMuted}
-        onLoadedData={() => {
-          const a = audioRef.current; if (!a) return;
-          try {
-            // Skip first ~2 seconds
-            a.currentTime = Math.min(a.duration - 0.05, 2);
-            a.play().catch(() => {});
-          } catch {}
-        }}
-        onEnded={() => {
-          const a = audioRef.current; if (!a) return;
-          try {
-            a.currentTime = Math.min(a.duration - 0.05, 2);
-            a.play().catch(() => {});
-          } catch {}
-        }}
-        onError={(e) => {
-          // eslint-disable-next-line no-console
-          console.warn('Ambient audio failed to load/play', e);
-        }}
-        style={{ display: 'none' }}
-      >
-        <source src="/waves-ambience.ogg" type="audio/ogg" />
-        <source src="/waves-ambience.mp3" type="audio/mpeg" />
-      </audio>
-
-      {/* Mute/Unmute control bottom-right */}
-      <div
-        className="absolute bottom-4 right-4" 
-        style={{ zIndex: 40 }}
-      >
-        <button
-          type="button"
-          onClick={() => {
-            setIsMuted((m) => {
-              const next = !m;
-              if (!next) {
-                const a = audioRef.current;
-                if (a) {
-                  try {
-                    a.muted = false;
-                    a.volume = 0;
-                    a.play().catch(() => {});
-                    const p = (scrollYProgress as any)?.get ? (scrollYProgress as any).get() : 0;
-                    const clamped = Math.max(0, Math.min(1, Number(p) || 0));
-                    const fac = 1 - 0.9 * clamped;
-                    rampVolume(Math.max(0, Math.min(1, volume * fac)), 600);
-                  } catch {}
-                }
-              }
-              return next;
-            });
+        {/* Ambient audio element (hidden) */}
+        <audio
+          ref={audioRef}
+          loop={false}
+          preload="auto"
+          muted={isMuted}
+          onLoadedData={() => {
+            const a = audioRef.current; if (!a) return;
+            try {
+              // Skip first ~2 seconds
+              a.currentTime = Math.min(a.duration - 0.05, 2);
+              a.play().catch(() => { });
+            } catch { }
           }}
-          className="inline-flex items-center justify-center rounded-full bg-black/40 backdrop-blur text-white border border-white/20 hover:bg-black/60 transition-colors"
-          style={{ width: 44, height: 44 }}
-          aria-label={isMuted ? 'Unmute ambient audio' : 'Mute ambient audio'}
+          onEnded={() => {
+            const a = audioRef.current; if (!a) return;
+            try {
+              a.currentTime = Math.min(a.duration - 0.05, 2);
+              a.play().catch(() => { });
+            } catch { }
+          }}
+          onError={(e) => {
+            // eslint-disable-next-line no-console
+            console.warn('Ambient audio failed to load/play', e);
+          }}
+          style={{ display: 'none' }}
         >
-          {isMuted ? <VolumeX className="w-5 h-5" /> : <Volume2 className="w-5 h-5" />}
-        </button>
-      </div>
+          <source src="/waves-ambience.ogg" type="audio/ogg" />
+          <source src="/waves-ambience.mp3" type="audio/mpeg" />
+        </audio>
 
-      {/* Loading State Overlay */}
-      {!showContent && (
-        <div className="absolute inset-0 z-20 flex flex-col items-center justify-center" style={{ height: '100vh', width: '100vw' }}>
-          <motion.div
-            initial={{ opacity: 0, scale: 0.8 }}
-            animate={{ opacity: 1, scale: 1 }}
-            transition={{ duration: 0.6 }}
-            className="text-center"
+        {/* Mute/Unmute control bottom-right */}
+        <div
+          className="absolute bottom-4 right-4"
+          style={{ zIndex: 40 }}
+        >
+          <button
+            type="button"
+            onClick={() => {
+              setIsMuted((m) => {
+                const next = !m;
+                if (!next) {
+                  const a = audioRef.current;
+                  if (a) {
+                    try {
+                      a.muted = false;
+                      a.volume = 0;
+                      a.play().catch(() => { });
+                      const p = (scrollYProgress as any)?.get ? (scrollYProgress as any).get() : 0;
+                      const clamped = Math.max(0, Math.min(1, Number(p) || 0));
+                      const fac = 1 - 0.9 * clamped;
+                      rampVolume(Math.max(0, Math.min(1, volume * fac)), 600);
+                    } catch { }
+                  }
+                }
+                return next;
+              });
+            }}
+            className="inline-flex items-center justify-center rounded-full bg-black/40 backdrop-blur text-white border border-white/20 hover:bg-black/60 transition-colors"
+            style={{ width: 44, height: 44 }}
+            aria-label={isMuted ? 'Unmute ambient audio' : 'Mute ambient audio'}
           >
-            <div className="w-16 h-16 border-4 border-blue-300/30 border-t-blue-300 rounded-full animate-spin mb-4 mx-auto"></div>
-            <p className="text-blue-200 text-lg">Loading Ocean Data...</p>
-          </motion.div>
+            {isMuted ? <VolumeX className="w-5 h-5" /> : <Volume2 className="w-5 h-5" />}
+          </button>
         </div>
-      )}
 
-      <Suspense fallback={null}>
-        {authOpen ? <AuthModal open={authOpen} onClose={closeAuth} /> : null}
-      </Suspense>
+        {/* Loading State Overlay */}
+        {!showContent && (
+          <div className="absolute inset-0 z-20 flex flex-col items-center justify-center" style={{ height: '100vh', width: '100vw' }}>
+            <motion.div
+              initial={{ opacity: 0, scale: 0.8 }}
+              animate={{ opacity: 1, scale: 1 }}
+              transition={{ duration: 0.6 }}
+              className="text-center"
+            >
+              <div className="w-16 h-16 border-4 border-blue-300/30 border-t-blue-300 rounded-full animate-spin mb-4 mx-auto"></div>
+              <p className="text-blue-200 text-lg">Loading Ocean Data...</p>
+            </motion.div>
+          </div>
+        )}
+
+        <Suspense fallback={null}>
+          {authOpen ? <AuthModal open={authOpen} onClose={closeAuth} /> : null}
+        </Suspense>
       </section>
-      
+
       {/* Spacer div to push about section below the fixed hero */}
       <div style={{ height: '100vh', width: '100%' }} />
     </>
