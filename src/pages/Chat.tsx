@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect, useMemo, memo } from "react";
-import { ArrowLeft, Send, Plus, Trash2, Clock, MessageSquare, Menu, X, Loader2 } from "lucide-react";
+import { ArrowLeft, Send, Plus, Trash2, Clock, MessageSquare, Menu, X, Loader2, MapPin, Compass } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import TransitionLink from "../components/TransitionLink";
 import { sendChatMessage } from "../services/chatApi";
@@ -33,6 +33,79 @@ const Chat = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const messagesEndRef = useRef<HTMLDivElement | null>(null);
+
+  // Context Location State
+  const [location, setLocation] = useState<{ name: string; lat: number; lng: number } | null>(null);
+  const [showLocationModal, setShowLocationModal] = useState(false);
+  const [locationQuery, setLocationQuery] = useState("");
+  const [isGeocoding, setIsGeocoding] = useState(false);
+  const [geocodeError, setGeocodeError] = useState<string | null>(null);
+
+  const handleGeocode = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!locationQuery.trim()) return;
+    setIsGeocoding(true);
+    setGeocodeError(null);
+    try {
+      const response = await fetch(
+        `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(
+          locationQuery.trim()
+        )}&format=json&limit=1`,
+        {
+          headers: {
+            "User-Agent": "OceanData-App"
+          }
+        }
+      );
+      const data = await response.json();
+      if (data && data.length > 0) {
+        const item = data[0];
+        const displayName = item.display_name.split(',')[0];
+        setLocation({
+          name: displayName,
+          lat: parseFloat(item.lat),
+          lng: parseFloat(item.lon)
+        });
+        setLocationQuery("");
+        setShowLocationModal(false);
+      } else {
+        setGeocodeError("Location not found. Try a different query.");
+      }
+    } catch (err) {
+      setGeocodeError("Failed to fetch coordinates. Please try again.");
+    } finally {
+      setIsGeocoding(false);
+    }
+  };
+
+  const handleDetectLocation = () => {
+    if (!navigator.geolocation) {
+      setGeocodeError("Geolocation is not supported by your browser.");
+      return;
+    }
+    setIsGeocoding(true);
+    setGeocodeError(null);
+    navigator.geolocation.getCurrentPosition(
+      (position) => {
+        setLocation({
+          name: "Current Location",
+          lat: position.coords.latitude,
+          lng: position.coords.longitude
+        });
+        setShowLocationModal(false);
+        setIsGeocoding(false);
+      },
+      (error) => {
+        setGeocodeError("Permission denied or location lookup failed.");
+        setIsGeocoding(false);
+      }
+    );
+  };
+
+  const handleResetLocation = () => {
+    setLocation(null);
+    setShowLocationModal(false);
+  };
 
   const chatHistories = useMemo<ChatHistory[]>(() => [
     {
@@ -102,12 +175,17 @@ const Chat = () => {
           content: m.content
         }));
 
-      const response = await sendChatMessage(userMessage.content, history);
+      const response = await sendChatMessage(
+        userMessage.content,
+        history,
+        location?.lat,
+        location?.lng
+      );
 
       const aiMessage: ChatMessage = {
         id: Date.now() + 1,
         type: "assistant",
-        content: response.reply,
+        content: response.reply.replace(/\*/g, ""),
         timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
       };
 
@@ -283,6 +361,24 @@ const Chat = () => {
               </div>
             </div>
           </div>
+
+          {/* Context Location Button */}
+          <div className="flex items-center gap-2">
+            <button
+              onClick={() => setShowLocationModal(true)}
+              className="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-slate-850 border border-slate-700/60 hover:bg-slate-800 hover:border-cyan-500/30 text-slate-300 hover:text-white transition-all text-xs font-medium shadow-md shadow-slate-950/20"
+            >
+              <MapPin className="w-3.5 h-3.5 text-cyan-400 animate-pulse" />
+              <span className="max-w-[120px] md:max-w-[200px] truncate">
+                {location ? location.name : "Mumbai Coast (Default)"}
+              </span>
+              {location && (
+                <span className="text-[10px] text-slate-500 font-normal hidden sm:inline">
+                  ({location.lat.toFixed(2)}°, {location.lng.toFixed(2)}°)
+                </span>
+              )}
+            </button>
+          </div>
         </div>
 
         {/* Messages Area */}
@@ -395,6 +491,106 @@ const Chat = () => {
           </form>
         </div>
       </motion.div>
+
+      {/* Location Search Modal */}
+      <AnimatePresence>
+        {showLocationModal && (
+          <motion.div
+            className="fixed inset-0 z-[70] flex items-center justify-center px-4"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+          >
+            {/* Dark backdrop */}
+            <motion.div
+              className="absolute inset-0 bg-slate-950/80 backdrop-blur-sm"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              onClick={() => setShowLocationModal(false)}
+            />
+
+            {/* Glassmorphic card */}
+            <motion.div
+              className="relative w-full max-w-md mx-auto rounded-2xl border border-slate-700/40 bg-slate-900/95 backdrop-blur-xl shadow-xl overflow-hidden z-10"
+              initial={{ scale: 0.95, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.95, opacity: 0 }}
+              transition={{ type: "spring", duration: 0.4 }}
+            >
+              {/* Glow edge */}
+              <div className="pointer-events-none absolute -inset-px rounded-2xl bg-gradient-to-r from-cyan-500/10 via-blue-500/10 to-transparent" />
+              
+              <div className="p-6 sm:p-8">
+                <div className="flex items-center justify-between mb-4">
+                  <h3 className="text-lg font-semibold text-slate-100 flex items-center gap-2">
+                    <MapPin className="w-5 h-5 text-cyan-400" />
+                    Set Ocean Context Location
+                  </h3>
+                  <button
+                    onClick={() => setShowLocationModal(false)}
+                    className="p-1.5 rounded-lg hover:bg-slate-800 text-slate-400 hover:text-slate-200 transition"
+                  >
+                    <X className="w-4 h-4" />
+                  </button>
+                </div>
+
+                <p className="text-xs text-slate-400 mb-6 leading-relaxed">
+                  Provide a city, coastline, or region. We geocode it to coordinates to fetch live StormGlass metrics for Ocean AI.
+                </p>
+
+                <form onSubmit={handleGeocode} className="space-y-4">
+                  <div className="flex gap-2">
+                    <input
+                      type="text"
+                      value={locationQuery}
+                      onChange={(e) => setLocationQuery(e.target.value)}
+                      placeholder="e.g. Goa, Goa Coast, Chennai, Miami"
+                      className="flex-1 rounded-xl bg-slate-800/50 border border-slate-700/50 focus:border-cyan-500/40 focus:ring-2 focus:ring-cyan-500/20 outline-none px-4 py-2.5 text-slate-200 placeholder:text-slate-500 text-sm transition"
+                    />
+                    <button
+                      type="submit"
+                      disabled={isGeocoding || !locationQuery.trim()}
+                      className="px-4 py-2.5 rounded-xl bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-500 hover:to-blue-500 text-white font-medium text-sm transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center min-w-[80px]"
+                    >
+                      {isGeocoding ? (
+                        <Loader2 className="w-4 h-4 animate-spin" />
+                      ) : (
+                        "Search"
+                      )}
+                    </button>
+                  </div>
+
+                  {geocodeError && (
+                    <p className="text-xs text-red-400 font-medium">⚠️ {geocodeError}</p>
+                  )}
+
+                  <div className="flex flex-col sm:flex-row gap-2 pt-2">
+                    <button
+                      type="button"
+                      onClick={handleDetectLocation}
+                      disabled={isGeocoding}
+                      className="flex-1 flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-slate-850 hover:bg-slate-800 border border-slate-700/60 text-slate-200 text-sm font-medium transition"
+                    >
+                      <Compass className="w-4 h-4 text-cyan-400" />
+                      Detect Location
+                    </button>
+                    {location && (
+                      <button
+                        type="button"
+                        onClick={handleResetLocation}
+                        className="flex-1 flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-slate-850 hover:bg-slate-800 border border-slate-700/60 text-slate-200 text-sm font-medium transition"
+                      >
+                        Reset to Default
+                      </button>
+                    )}
+                  </div>
+                </form>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </motion.div>
   );
 };

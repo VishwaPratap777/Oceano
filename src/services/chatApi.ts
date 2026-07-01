@@ -13,10 +13,12 @@ interface ChatResponse {
 
 export async function sendChatMessage(
   message: string,
-  history: ChatMessage[] = []
+  history: ChatMessage[] = [],
+  lat?: number,
+  lng?: number
 ): Promise<ChatResponse> {
   return apiFetch<ChatResponse>("/chat", {
     method: "POST",
-    body: JSON.stringify({ message, history }),
+    body: JSON.stringify({ message, history, lat, lng }),
   });
 }
